@@ -47,6 +47,7 @@ function __hag_rehydrate() {
 
 	# If this didn't yield a project name, we want to force one.
 	if [ -z "$HAG_PURPOSE" ]; then
+		local purpose="unset"
 		read -rp ":( hag doesn't have a purpose; please set one: " purpose;
 		__hag_purpose "$purpose"
 		__load_shell_history
