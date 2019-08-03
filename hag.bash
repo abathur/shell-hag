@@ -126,7 +126,7 @@ function __hag_make_history_file() {
 	# shellcheck disable=SC2034,SC2162
 	read id __filename < <(md5sum "${2}")
 
-	local cmd_hist_file="$HAG_DIR/$HAG_PURPOSE/$HAG_SESSION_ID.$command"
+	local cmd_hist_file="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$command"
 
 	touch "$cmd_hist_file"
 
