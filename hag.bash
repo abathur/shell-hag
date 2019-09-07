@@ -68,13 +68,17 @@ function hag(){
 			__hag_purpose "$2"
 			__load_shell_history;
 			;;
+		import)
+			hag_import_history.bash "$HAG_PIPE" "${@:2}"
+			;;
 		tidy)
 			__hag_tidy
 			;;
 		*)
-			echo "hag has two subcommands."
-			printf "    %-10s - %s\n" "purpose <#>" "Set the purpose"
-			printf "    %-10s - %s\n" "tidy" "Expunge old (14d+) sessions"
+			echo "hag has the following subcommands:"
+			printf "   %s\n      %s\n" "purpose <name>" "Set the purpose"
+			printf "   %s\n      %s\n" "import [histfile...]" "Import one or more traditional histfiles to an existing purpose (prompts for purpose)."
+			printf "   %s\n      %s\n" "tidy" "Expunge old (14d+) sessions"
 			;;
 	esac
 }
