@@ -62,6 +62,9 @@ function __hag_tidy()
 function hag(){
 	case "$1" in
 		purpose)
+			# TODO: there's probably a logic hole here wrt to purpose changes in a *running* shell.
+			# I think my intent is that it'd swap out your history for the one of the new purpose
+			# but this means it should probably save/aggregate the histfile for your previous purpose before it loads the new one
 			__hag_purpose "$2"
 			__load_shell_history;
 			;;
@@ -121,7 +124,8 @@ function trap_usr2(){
 trap trap_usr1 USR1
 trap trap_usr2 USR2
 
-# TODO: document $2, and what we're doing with the md5sum
+# TODO: document $2, and what we're doing with the md5sum?
+# TODO: actually, reading closer it looks like this is obsolete. I don't see it used. I think it's vestigial from when I was trying to make a file per command run, not a single stream/log
 function __hag_make_history_file() {
 	local command=${1}
 

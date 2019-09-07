@@ -15,6 +15,7 @@ export HAG_PIPE="$HAG_DATA_DIR/.pipe"
 function _hag_load_schema_and_data()
 {
 	echo ".read $HAG_SCHEMA";
+	# echo ".echo on"; # for debugging SQL errors
 	for f in "$HAG_EXPORT_DIR"/*.sql; do
 	    [ -e "$f" ] && echo ".read $f"
 	done
@@ -29,6 +30,7 @@ function _hag_start_daemon()
 	".once $HAG_NEXT_EXPORT_FILE" \
 	"SELECT user,hostname,purpose,pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd,TRUE FROM log WHERE exported IS NOT TRUE order by start_time" \
 	"UPDATE log SET exported=TRUE WHERE exported IS NOT TRUE"
+	# TODO: this can produce an empty file if there are no commands to export; be cautious since there are consequences for getting it wrong, but add code to detect an empty file here (and log it), and as long as there are never false positives, start manually removing them.
 	rm "$HAG_DB"
 	@sqlite@ "$HAG_DB" < <(_hag_load_schema_and_data)
 	exec "$HAG_SRC/daemon.py"
