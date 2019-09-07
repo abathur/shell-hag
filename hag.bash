@@ -32,9 +32,9 @@ function __hag_dehydrate() {
 		__haggregate_shell_history
 	fi
 
-	if [ ! -e "$HAG_SESSION_FILE" ]; then
-		echo "hag purpose '$HAG_PURPOSE'" >> "$HAG_SESSION_FILE"
-	fi
+	# these should be in place already, but
+	# make sure the current state is restorable
+	__hag_confirm_state_files
 }
 event on before_exit __hag_dehydrate
 # TODO move above alongside other global-scope source-time commands, or keep here for local clarity?
@@ -66,7 +66,7 @@ function hag(){
 			# I think my intent is that it'd swap out your history for the one of the new purpose
 			# but this means it should probably save/aggregate the histfile for your previous purpose before it loads the new one
 			__hag_purpose "$2"
-			__load_shell_history;
+			__load_shell_history
 			;;
 		import)
 			hag_import_history.bash "$HAG_PIPE" "${@:2}"
@@ -83,12 +83,22 @@ function hag(){
 	esac
 }
 
-function __hag_purpose() {
-	export HAG_PURPOSE=$1;
-	HAG_PURPOSE_DIR="$HAG_DIR/$HAG_PURPOSE";
-	HISTFILE="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$HAG_SHELL"
+function __hag_confirm_state_files() {
 	mkdir -p "$HAG_PURPOSE_DIR"
-	__hag_set_title "$HAG_PURPOSE";
+	if [ ! -e "$HAG_PURPOSE_INIT_FILE" ]; then
+		echo "hag purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
+	fi
+	ln -fs "$HAG_PURPOSE_INIT_FILE" "$HAG_SESSION_FILE"
+}
+
+function __hag_purpose() {
+	export HAG_PURPOSE=$1
+	export HAG_PURPOSE_DIR="$HAG_DIR/$HAG_PURPOSE"
+	export HAG_PURPOSE_INIT_FILE="$HAG_PURPOSE_DIR/.init"
+	HISTFILE="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$HAG_SHELL"
+
+	__hag_confirm_state_files
+	__hag_set_title "$HAG_PURPOSE"
 }
 
 function __haggregate_shell_history() {
