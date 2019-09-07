@@ -348,7 +348,7 @@ function __hag_post_cmd() {
 	local $1 $3 $(event emit "__hag_post_invocation_$2_vars")
 	unset IFS
 
-	printf "%s\n" "end_time=${end_time@Q}" "end_timestamp=${end_timestamp@Q}" "duration=${duration@Q}" "===" >> "$out_history_file"
+	printf "%s\n" "end_time=${end_time@Q}" "end_timestamp=${end_timestamp}" "duration=${duration}" "===" >> "$out_history_file"
 
 	tail -q -n +${start_history_lines} "$command_history_file" >> "$out_history_file"
 	return $?
@@ -364,10 +364,12 @@ function __hag_record_history(){
 
 	__HAG_PREV_CMD_NUM=${shellswain[command_number]}
 
-	# NOTE: last field is echoed from a subshell (without quoting in the subshell!) to force shell expansion (so we record the command as-entered, *and* what it expanded to match @ runtime!)
+	# NOTES:
+	# - last field is echoed from a subshell (without quoting in the subshell!) to force shell expansion (so we record the command as-entered, *and* what it expanded to match @ runtime!)
+	# - last 2 fields have space around quotes to keep python from breaking on commands that start/end with a single quote
 	# TODO: I guess the command expansion and tracking of the "expanded" command could be conditional, which would save performance and database size (especially if they frequently run commands with big globs...), but the database schemas would be incompatible, so I think at minimum it would be a *build* option, not a runtime one.
 	# shellcheck disable=SC2116,SC2086
-	printf '["%s","%s",%d,%d,"%s",'"'''%s''','''%s''']\n"  "${HAG_PURPOSE}" "${PWD}" "${shellswain[start_timestamp]}" "${shellswain[duration]}" "${shellswain[pipestatus]}" "${shellswain[command]}" "$(echo ${shellswain[command]})" >> "$HAG_PIPE"
+	printf '["%s","%s",%d,%d,"%s",'"r''' %s ''',r''' %s ''']\n"  "${HAG_PURPOSE}" "${PWD}" "${shellswain[start_timestamp]}" "${shellswain[duration]}" "${shellswain[pipestatus]}" "${shellswain[command]}" "$(echo ${shellswain[command]})" >> "$HAG_PIPE"
 }
 
 # TODO: bashup is leaking through, here; am I fine with that or should this be a swain API?
