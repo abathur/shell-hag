@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS log (
     hostname TEXT, -- cached here
     -- all remaining via pipe
     -- little variety
-    project TEXT,
+    purpose TEXT,
     pwd TEXT,
     -- much variety
     start_time INTEGER, -- this might be the PK?
@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS log (
     expanded_cmd TEXT,
 
     -- not inserted; changed later on export
-    exported INTEGER NOT NULL DEFAULT 0
+    exported INTEGER NOT NULL DEFAULT 0,
     -- <name> <type> [PRIMARY KEY ][NOT NULL ][DEFAULT <value> ][CHECK][UNIQUE]
-    -- PRIMARY KEY (contact_id, group_id),
+    PRIMARY KEY (start_time, entered_cmd)
     -- FOREIGN KEY (contact_id) REFERENCES contacts (contact_id)
     -- ON DELETE CASCADE ON UPDATE NO ACTION,
 ); -- may want WITHOUT ROWID; worth testing! https://www.sqlite.org/withoutrowid.html

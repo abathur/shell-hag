@@ -27,7 +27,7 @@ function _hag_start_daemon()
 	@sqlite@ "$HAG_DB" \
 	".mode insert log" \
 	".once $HAG_NEXT_EXPORT_FILE" \
-	"SELECT user,hostname,project,pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd,TRUE FROM log WHERE exported IS NOT TRUE" \
+	"SELECT user,hostname,purpose,pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd,TRUE FROM log WHERE exported IS NOT TRUE order by start_time" \
 	"UPDATE log SET exported=TRUE WHERE exported IS NOT TRUE"
 	rm "$HAG_DB"
 	@sqlite@ "$HAG_DB" < <(_hag_load_schema_and_data)

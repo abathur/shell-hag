@@ -45,7 +45,7 @@ function __hag_rehydrate() {
 		touch "$HAG_SESSION_FILE"
 	fi
 
-	# If this didn't yield a project name, we want to force one.
+	# If this didn't yield a purpose name, we want to force one.
 	if [ -z "$HAG_PURPOSE" ]; then
 		local purpose="unset"
 		read -rp ":( hag doesn't have a purpose; please set one: " purpose;
@@ -102,12 +102,14 @@ function __load_shell_history() {
 			# TODO: nail down path
 			# TODO: decide/settle/document the nix @replacement@ vars?
 			# TODO: hardcoded limit; this should be based on HISTSIZE
-			@sqlite@ "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select '#'||substr(start_time,1,length(start_time)-6), entered_cmd from log where project='$HAG_PURPOSE' order by start_time ASC limit 500"
+			@sqlite@ "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select '#'||substr(start_time,1,length(start_time)-6), entered_cmd from log where purpose='$HAG_PURPOSE' order by start_time ASC limit 500"
 			history -n "$tmphist"
 			((__HAG_PREV_CMD_NUM=HISTCMD-1))
 		fi
 	fi
 }
+
+
 
 function trap_usr1(){
 	echo "trapped USR1" "$@"

@@ -13,7 +13,7 @@ import ast
 CSV_FMT = "pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd"
 
 insert_command = """
-    INSERT INTO log (user,hostname,project,pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd)
+    INSERT INTO log (user,hostname,purpose,pwd,start_time,duration,pipestatus,entered_cmd,expanded_cmd)
     VALUES (?,?,?,?,?,?,?,?,?)
 """
 
@@ -25,7 +25,7 @@ create_tables = """
         hostname TEXT, -- cached here
         -- all remaining via pipe
         -- little variety
-        project TEXT,
+        purpose TEXT,
         pwd TEXT,
         -- much variety
         start_time INTEGER, -- this might be the PK?
@@ -66,7 +66,7 @@ DB = None
 def chomp_row_v1(
     user,
     hostname,
-    project,
+    purpose,
     pwd,
     start_time,
     duration,
@@ -75,21 +75,25 @@ def chomp_row_v1(
     expanded_cmd,
 ):
     with DB:
-        DB.execute(
-            insert_command,
-            (
-                user,
-                hostname,
-                project,
-                pwd,
-                start_time,
-                duration,
-                pipestatus,
-                entered_cmd,
-                expanded_cmd.strip(),
-            ),
-            # TODO this could be optimized
-        )
+        try:
+            DB.execute(
+                insert_command,
+                (
+                    user,
+                    hostname,
+                    purpose,
+                    pwd,
+                    start_time,
+                    duration,
+                    pipestatus,
+                    entered_cmd.strip() if entered_cmd else entered_cmd,
+                    expanded_cmd.strip() if expanded_cmd else expanded_cmd,
+                ),
+                # TODO this could be optimized
+            )
+        except sqlite3.IntegrityError as e:
+            # we probably already have this record. We've already printed the ingest; let's just print the message and swallow the error
+            print("errybody", e)
 
 
 def add_ingester(header: str, ingester: Ingester) -> Ingester:
