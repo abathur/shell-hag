@@ -39,17 +39,31 @@ function __hag_dehydrate() {
 event on before_exit __hag_dehydrate
 # TODO move above alongside other global-scope source-time commands, or keep here for local clarity?
 
-function __hag_rehydrate() {
-	if [ -r "$HAG_SESSION_FILE" ]; then
-		source "$HAG_SESSION_FILE"
-		touch "$HAG_SESSION_FILE"
+__hag_load_purpose() {
+	if [ -r "$1" ]; then
+		source "$1"
+		touch "$1"
 	fi
+
+	if [ -z "$HAG_PURPOSE" ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+function __hag_reload_or_set_purpose() {
+	__hag_load_purpose "$HAG_DIR/$1/.init" || __hag_set_purpose "$1"
+}
+
+function __hag_rehydrate() {
+	__hag_load_purpose "$HAG_SESSION_FILE"
 
 	# If this didn't yield a purpose name, we want to force one.
 	if [ -z "$HAG_PURPOSE" ]; then
 		local purpose="unset"
 		read -rp ":( hag doesn't have a purpose; please set one: " purpose;
-		__hag_purpose "$purpose"
+		__hag_reload_or_set_purpose "$purpose"
 		__load_shell_history
 	fi
 }
@@ -65,7 +79,7 @@ function hag(){
 			# TODO: there's probably a logic hole here wrt to purpose changes in a *running* shell.
 			# I think my intent is that it'd swap out your history for the one of the new purpose
 			# but this means it should probably save/aggregate the histfile for your previous purpose before it loads the new one
-			__hag_purpose "$2"
+			__hag_reload_or_set_purpose "$2"
 			__load_shell_history
 			;;
 		import)
@@ -86,16 +100,23 @@ function hag(){
 function __hag_confirm_state_files() {
 	mkdir -p "$HAG_PURPOSE_DIR"
 	if [ ! -e "$HAG_PURPOSE_INIT_FILE" ]; then
-		echo "hag purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
+		echo "__hag_set_purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
 	fi
+	echo "cd '$PWD'" > $HAG_PURPOSE_PWD_FILE
 	ln -fs "$HAG_PURPOSE_INIT_FILE" "$HAG_SESSION_FILE"
 }
 
-function __hag_purpose() {
-	export HAG_PURPOSE=$1
+function __hag_set_purpose() {
+	export HAG_PURPOSE="$1"
 	export HAG_PURPOSE_DIR="$HAG_DIR/$HAG_PURPOSE"
 	export HAG_PURPOSE_INIT_FILE="$HAG_PURPOSE_DIR/.init"
+	export HAG_PURPOSE_PWD_FILE="$HAG_PURPOSE_DIR/.pwd"
+
 	HISTFILE="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$HAG_SHELL"
+
+	if [ -r "$HAG_PURPOSE_PWD_FILE" ]; then
+		source "$HAG_PURPOSE_PWD_FILE"
+	fi
 
 	__hag_confirm_state_files
 	__hag_set_title "$HAG_PURPOSE"
