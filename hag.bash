@@ -93,10 +93,8 @@ function hag(){
 			__load_shell_history
 			;;
 		*)
-			if ! command hag "${@}"; then
-				printf "\nThe hag profile plugin adds the following subcommands:"
-				printf "   %s\n      %s\n" "purpose <name>" "Set the purpose"
-			fi
+			printf "\nThe hag profile plugin adds the following subcommands:"
+			printf "   %s\n      %s\n" "purpose <name>" "Set the purpose"
 			;;
 	esac
 }
