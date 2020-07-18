@@ -45,8 +45,8 @@ resholved.buildResholvedPackage rec {
 
   meta = with stdenv.lib; {
     description = "A shell history aggregator";
-    homepage = https://github.com/abathur/hag;
-    license = licenses.cc0; # TODO
+    homepage = https://github.com/abathur/shell-hag;
+    license = licenses.mit;
     maintainers = with maintainers; [ abathur ];
     platforms = platforms.all;
   };

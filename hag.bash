@@ -92,9 +92,15 @@ function hag(){
 			__hag_reload_or_set_purpose "$2"
 			__load_shell_history
 			;;
+		regenerate)
+			__load_shell_history_from_db
+			__overwrite_histfile_with_loaded_history
+			;;
 		*)
-			printf "\nThe hag profile plugin adds the following subcommands:"
+			printf "\nThe hag profile plugin adds the following subcommands:\n"
 			printf "   %s\n      %s\n" "purpose <name>" "Set the purpose"
+			printf "   %s\n      %s\n" "regenerate" "Re-generate the current histfile from the hag database."
+			printf "      %s\n" "(histfile: $HISTFILE)."
 			;;
 	esac
 }
@@ -132,6 +138,20 @@ function __haggregate_shell_history() {
 	history -a
 }
 
+__load_shell_history_from_db(){
+	# shellcheck disable=SC2155
+	local tmphist=$(mktemp)
+	# TODO: nail down path
+	# TODO: hardcoded limit; this should be based on HISTSIZE
+	sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select ran_at, entered_cmd from (select start_time, duration, '#'||substr(start_time,1,length(start_time)-6) as ran_at, entered_cmd from log where purpose='$HAG_PURPOSE' and start_time IS NOT NULL order by start_time DESC, duration DESC limit 500) as recent order by start_time ASC, duration ASC"
+	history -n "$tmphist"
+	((__HAG_PREV_CMD_NUM=HISTCMD-1))
+}
+
+__overwrite_histfile_with_loaded_history(){
+	history -w
+}
+
 function __load_shell_history() {
 	history -n
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
@@ -141,19 +161,10 @@ function __load_shell_history() {
 	if [[ 0 == $__HAG_PREV_CMD_NUM ]]; then
 		# if there are shell history files, let's generate history
 		if compgen -G "$HAG_PURPOSE_DIR/*.$HAG_SHELL" > /dev/null; then
-			# shellcheck disable=SC2155
-			local tmphist=$(mktemp)
-			# TODO: nail down path
-			# TODO: decide/settle/document the nix @replacement@ vars?
-			# TODO: hardcoded limit; this should be based on HISTSIZE
-			sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select * from (select '#'||substr(start_time,1,length(start_time)-6), entered_cmd from log where purpose='$HAG_PURPOSE' order by start_time,duration DESC limit 500) order by start_time,duration ASC"
-			history -n "$tmphist"
-			((__HAG_PREV_CMD_NUM=HISTCMD-1))
+			__load_shell_history_from_db
 		fi
 	fi
 }
-
-
 
 function trap_usr1(){
 	echo "trapped USR1" "$@"
