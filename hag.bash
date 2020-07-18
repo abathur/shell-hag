@@ -93,8 +93,7 @@ function hag(){
 			__load_shell_history
 			;;
 		regenerate)
-			__load_shell_history_from_db
-			__overwrite_histfile_with_loaded_history
+			__reload_shell_history_from_db
 			;;
 		*)
 			printf "\nThe hag profile plugin adds the following subcommands:\n"
@@ -138,7 +137,13 @@ function __haggregate_shell_history() {
 	history -a
 }
 
-__load_shell_history_from_db(){
+function __reload_shell_history_from_db(){
+	history -c # empty current history
+	__load_shell_history_from_db
+	__overwrite_histfile_with_loaded_history
+}
+
+function __load_shell_history_from_db(){
 	# shellcheck disable=SC2155
 	local tmphist=$(mktemp)
 	# TODO: nail down path
@@ -148,7 +153,7 @@ __load_shell_history_from_db(){
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 }
 
-__overwrite_histfile_with_loaded_history(){
+function __overwrite_histfile_with_loaded_history(){
 	history -w
 }
 
