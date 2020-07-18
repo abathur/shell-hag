@@ -146,7 +146,7 @@ function __load_shell_history() {
 			# TODO: nail down path
 			# TODO: decide/settle/document the nix @replacement@ vars?
 			# TODO: hardcoded limit; this should be based on HISTSIZE
-			sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select '#'||substr(start_time,1,length(start_time)-6), entered_cmd from log where purpose='$HAG_PURPOSE' order by start_time,duration ASC limit 500"
+			sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select * from (select '#'||substr(start_time,1,length(start_time)-6), entered_cmd from log where purpose='$HAG_PURPOSE' order by start_time,duration DESC limit 500) order by start_time,duration ASC"
 			history -n "$tmphist"
 			((__HAG_PREV_CMD_NUM=HISTCMD-1))
 		fi
