@@ -149,7 +149,7 @@ function __load_shell_history_from_db(){
 	# TODO: nail down path
 	# TODO: hardcoded limit; this should be based on HISTSIZE
 	sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select ran_at, entered_cmd from (select start_time, duration, '#'||substr(start_time,1,length(start_time)-6) as ran_at, entered_cmd from log where purpose='$HAG_PURPOSE' and start_time IS NOT NULL order by start_time DESC, duration DESC limit 500) as recent order by start_time ASC, duration ASC"
-	history -n "$tmphist"
+	history -r "$tmphist"
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 }
 
