@@ -50,6 +50,7 @@ event on before_exit __hag_dehydrate
 # TODO move above alongside other global-scope source-time commands, or keep here for local clarity?
 
 __hag_load_purpose() {
+	# file readable by me
 	if [ -r "$1" ]; then
 		# shellcheck disable=SC1090
 		source "$1"
@@ -57,6 +58,7 @@ __hag_load_purpose() {
 	fi
 
 	if [ -z "$HAG_PURPOSE" ]; then
+	 	# sourcing the file didn't set a purpose
 		return 1
 	else
 		return 0
@@ -64,7 +66,12 @@ __hag_load_purpose() {
 }
 
 function __hag_reload_or_set_purpose() {
-	__hag_load_purpose "$HAG_DIR/$1/.init" || __hag_set_purpose "$1"
+	if [ -n "$HAG_PURPOSE" ]; then
+		# purpose already set
+		__hag_set_purpose "$1"
+	else
+		__hag_load_purpose "$HAG_DIR/$1/.init" || __hag_set_purpose "$1"
+	fi
 }
 
 function __hag_rehydrate() {
