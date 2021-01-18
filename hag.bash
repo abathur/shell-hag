@@ -501,7 +501,7 @@ function __hag_post_cmd() {
 
 	printf "%s\n" "end_time=${end_time@Q}" "end_timestamp=${end_timestamp}" "duration=${duration}" "===" >> "$out_history_file"
 
-	tail -q -n +${start_history_lines} "$command_history_file" >> "$out_history_file"
+	tail -q -n +"${start_history_lines}" "$command_history_file" >> "$out_history_file"
 	return $?
 }
 
