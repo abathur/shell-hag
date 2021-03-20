@@ -231,14 +231,14 @@ function __hag_pass_post_invocation(){
 function __pass_command_path(){
 	# shellcheck disable=SC2155
 	local command_path=$(type -P "$1");
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 
 function __pass_history_files(){
 	local command_history_file="$HOME/.$1_history"
 	# shellcheck disable=SC2155
 	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 
 function __pass_python_vars(){
@@ -267,20 +267,20 @@ function __pass_python_vars(){
 
 	# shellcheck disable=SC2155
 	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 function __pass_sqlite3_vars(){
 	local command_history_file="$HOME/.sqlite_history"
 	# shellcheck disable=SC2155
 	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 
 function __pass_pre_command_timing(){
 	# shellcheck disable=SC2154
 	local start_time="${shellswain[start_time]}"
 	local start_timestamp="${shellswain[start_timestamp]}"
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 
 function __pass_post_command_timing(){
@@ -288,7 +288,7 @@ function __pass_post_command_timing(){
 	local duration="${shellswain[duration]}"
 	local end_time="${shellswain[end_time]}"
 	local end_timestamp="${shellswain[end_timestamp]}"
-	local | xargs printf "%s\n" # echo these vars for export
+	local -p # echo these vars for export
 }
 
 # <command> <prehook> <runner> <posthook>
@@ -353,7 +353,7 @@ function __hag_reset_title(){
 
 function nix_shell_run(){
 	# shellcheck disable=SC2086
-	local $1 # TODO: this technically needs IFS change to catch everything, but I guess I can also omit it when I *know* we don't have to handle spaces?
+	eval "$1"
 
 	# for ref, old format: HISTFILE="$HAG_DIR/nix-shell/$(echo "$PWD" | tr / _)" command "$command_path" --keep HISTFILE "${@:3}";
 	# TODO: this histfile path uses the old format. If you actually write to it, hag will start interpreting nix-shell as a purpose. Which brings up a tricky point. The way I've broken everything down by .config/hag/<purpose>/<id>.<command> means that whether you call these <termid|command_hash>.<nix-shell|bash>, the *normal* structural expectation is for the history to get saved under its purpose (and, therefore, to have separate per-purpose history). I see 3 outs:
@@ -448,10 +448,8 @@ function nix_shell_run(){
 }
 
 function __hag_pre_cmd() {
-	IFS=$'\n'
-	# shellcheck disable=SC2046,SC2086
-	local $1 $(event emit __hag_pre_invocation_$2_vars)
-	unset IFS
+	eval "$1"
+	eval "$(event emit __hag_pre_invocation_$2_vars)"
 
 	touch "$command_history_file"
 	local start_history_lines _hag_junkfile
@@ -480,10 +478,7 @@ function __hag_pre_cmd() {
 }
 
 function __hag_run_cmd() {
-	IFS=$'\n'
-	# shellcheck disable=SC2086
-	local $1
-	unset IFS
+	eval "$1"
 
 	if [[ -n "$wrap_command" ]]; then
 		# r(ead)l(ine)wrap lets us inject history where it wasn't. It may cause problems.
@@ -494,10 +489,9 @@ function __hag_run_cmd() {
 }
 
 function __hag_post_cmd() {
-	IFS=$'\n'
-	# shellcheck disable=SC2046,SC2086
-	local $1 $3 $(event emit "__hag_post_invocation_$2_vars")
-	unset IFS
+	eval "$1"
+	eval "$3"
+	eval "$(event emit "__hag_post_invocation_$2_vars")"
 
 	printf "%s\n" "end_time=${end_time@Q}" "end_timestamp=${end_timestamp}" "duration=${duration}" "===" >> "$out_history_file"
 
