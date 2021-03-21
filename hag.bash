@@ -115,11 +115,14 @@ export hag # TODO: I'm not sure if this is necessary for subshells or if I was j
 
 
 function __hag_confirm_state_files() {
+	# dirs outputs tilde-relative path; +0 == current
+	local relpwd="$(dirs +0)"
 	mkdir -p "$HAG_PURPOSE_DIR"
 	if [ ! -e "$HAG_PURPOSE_INIT_FILE" ]; then
 		echo "__hag_set_purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
 	fi
-	echo "cd '$PWD'" > "$HAG_PURPOSE_PWD_FILE"
+	# replace space with '\ '
+	echo "cd ${relpwd// /\\ }" > "$HAG_PURPOSE_PWD_FILE"
 	ln -fs "$HAG_PURPOSE_INIT_FILE" "$HAG_SESSION_FILE"
 }
 
