@@ -1,13 +1,13 @@
 #with import <nixpkgs> {};
-{ stdenv, lib, resholved, fetchFromGitHub, bashInteractive_5, coreutils, findutils, gnugrep, gnused, shellswain, smenu, sqlite, rlwrap
-, doCheck ? true, shellcheck }:
+{ stdenv, lib, resholvePackage, fetchFromGitHub, bashInteractive_5, coreutils, findutils, gnugrep, gnused, shellswain, smenu, sqlite, rlwrap
+, doCheck ? false, shellcheck }:
 let
 
 
   # service/daemon
 
 in
-resholved.buildResholvedPackage rec {
+resholvePackage rec {
   pname = "hag";
   version = "unreleased";
 
@@ -15,41 +15,53 @@ resholved.buildResholvedPackage rec {
     owner = "abathur";
     repo = "shell-hag";
     # rev = "v${version}";
-    rev = "3c635774abc3f55f916d756619c6a2b846a7cc2b";
-    sha256 = "10mngwq0malh2rqyh0brgh8crn3ahlmpxhi609y70mlzqrldam8n";
+    rev = "130db6753f0a410ffa4111836de720bd295e0b9b";
+    hash = "sha256-w5dHJOOyCTor9xj77EsTzMZrU5QWTB8Iw4kUiKibn7w=";
   };
   # src = lib.cleanSource ../../../../work/hag;
 
-  scripts = [ "hag.bash" "hag_import_history.bash" ];
-  allow = {
-    source = [ "HAG_PURPOSE_PWD_FILE" ];
-    command = [ "command_path" ];
+  solutions = {
+    profile = {
+      scripts = [ "bin/hag.bash" ];
+      interpreter = "none";
+      keep = {
+        source = [ "$HAG_PURPOSE_PWD_FILE" ];
+        command = [ "$command_path" ];
+        rlwrap = [ "$command_path" ];
+        "$command_history_file" = true;
+      };
+
+      inputs = [
+        coreutils
+        findutils
+        gnugrep
+        shellswain
+        sqlite
+        rlwrap
+      ];
+    };
+    cmd = {
+      scripts = [ "bin/hag_import_history.bash" ];
+      interpreter = "${bashInteractive_5}/bin/bash";
+
+      inputs = [
+        coreutils
+        gnused
+        smenu
+      ];
+    };
   };
-
-
-  inputs = [
-    coreutils
-    findutils
-    gnugrep
-    gnused
-    shellswain
-    smenu
-    sqlite
-    rlwrap
-  ];
 
   makeFlags = [ "prefix=${placeholder "out"}" ];
 
   inherit doCheck;
-  checkInputs = [ shellcheck ];
+  # checkInputs = [ shellcheck ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A shell history aggregator";
     homepage = https://github.com/abathur/shell-hag;
     license = licenses.mit;
     maintainers = with maintainers; [ abathur ];
     platforms = platforms.all;
   };
-
-
 }
