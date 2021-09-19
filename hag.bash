@@ -373,7 +373,7 @@ function nix_shell_run(){
 	# shellcheck disable=SC2034
 	read -r hash __filename < <(md5sum <<< "${to_hash}")
 	HISTFILE="$HAG_DIR/.nix-shell/$hash" command "$command_path" --keep HAG_SESSION_ID --keep HAG_SESSION_FILE --keep HAG_PURPOSE --keep HAG_PURPOSE_DIR --keep HISTFILE "${@:3}";
-	# append --keep HISTFILE to make sure it works for pure shells (though unless it can be double-invoked, it may be a bitch to parse/massage)
+	# append --keep HISTFILE to make sure it works for pure shells (though unless it can be double-invoked, it may be tricky to parse/massage)
 	# TODO: this works, but in pure mode we lose:
 	# - history timestamps
 	# - the term/tab ID
@@ -438,7 +438,7 @@ function nix_shell_run(){
 
 	# there's a missing element here. I'm a little embarassed about not seeing it.
 	# nix-shell is just bash. I want to save the history. And I want to have these micro-histories, but:
-	# - I probably don't need to give a flying fuck about mapping the shell to the file for history purposes. The commands should still go into the command log as bash commands (unless I give nix-shell a distinct table)
+	# - I probably don't need to care about mapping the shell to the file for history purposes. The commands should still go into the command log as bash commands (unless I give nix-shell a distinct table)
 	# - But I probably *DO* need to think about whether I can/should preserve enough retroactive information to tell that the command was run in this-or-that nix-shell.
 	#	I guess this could be a more general thought about any bash sub-shell; should it be somehow associated with the command that created it?
 	# 		I'm not sure there's a huge value to capture here, but I guess if you tracked shell-level and the termid you could notice (and even post-hoc reconstruct) when the level goes up/down as a result of a command, but you'd have to keep these in the database if you want to be able to do it post-hoc, and you'd have to generate an ID the moment you notice it to fix-up the history at the time.
@@ -447,7 +447,7 @@ function nix_shell_run(){
 	#				It might be more obvious why there's a rando commando that you don't hve installed
 	#				I guess you might want to be able to query for all commands run in a nix-shell, or all commands run in a specific nix-shell command (even if it has paged out of the local histfile)
 	#					IF YOU REPRODUCE AT THIS LEVEL there are a few options available. expand the context of the existing log table so that you can have fields that identify a nix sheell or more generic subshell uniquely or by command OR have something like 2 more tables, 1 listing nix-shell-sessions (log_id, termid, purpose), and another mapping commands from the log into it like cmd_id, nix_shell_session_id
-	# * if I get all of the bash lines into the log, and the primary place they live is the log, I can probably reconstruct anything I give some shits about wrt to individual sessions with heuristics or manual tagging later...
+	# * if I get all of the bash lines into the log, and the primary place they live is the log, I can probably reconstruct anything I care about wrt to individual sessions with heuristics or manual tagging later...
 }
 
 function __hag_pre_cmd() {

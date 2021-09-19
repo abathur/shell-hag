@@ -47,7 +47,7 @@ __hag_import_histfile(){
 	# 1538838292000000
 	# 1562723702825900,2422
 	# now we have to actually try and make some magic to insert these
-	# one possibility is writing values onto the pipe like the regular script does (though we might compose one big block and drop them all on the pipe at once? or we could do it one by one? high chance of this skullfucking the existing setup :D)
+	# one possibility is writing values onto the pipe like the regular script does (though we might compose one big block and drop them all on the pipe at once? or we could do it one by one? high chance of this breaking the existing setup :D)
 	#printf '[None,None,%d,None,None,'"'''%s''',None]\n" "${shellswain[start_timestamp]}" "${shellswain[command]}"  >> "$HAG_PIPE"
 	history -c # clear
 	# sort by time?
