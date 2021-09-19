@@ -168,7 +168,7 @@ function __overwrite_histfile_with_loaded_history(){
 }
 
 function __load_shell_history() {
-	history -n
+	history -r
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 
 	# there's no history loaded yet; let's see if it's worth trying to synthesize
