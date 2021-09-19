@@ -4,8 +4,8 @@ Its long-term aim is to aggregate not just bash history, but also the history of
 
 Don't depend on it, yet.
 
-It works well enough to live in my own bash profile, but I haven't sorted out how I want to handle public/private APIs yet; I assume I'll end up renaming some or all of the functions.
+It works well enough to live in my own bash profile, but:
+- It does some poorly-documented stuff with your history.
+- I haven't sorted out how I want to handle public/private APIs yet; I assume I'll end up renaming some or all of the functions.
 
-It also does poorly documented stuff with your history.
-
-Hag depends on https://github.com/abathur/shellswain (and thus on bash 5.0 and https://github.com/bashup/events).
+Hag depends on https://github.com/abathur/shellswain (and thus on bash 5 and https://github.com/bashup/events).
