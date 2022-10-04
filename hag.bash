@@ -1,24 +1,40 @@
 # shellcheck shell=bash
 if [[ -z "$SHELLSWAIN_ABOARD" ]]; then
 	# TODO: doc what this provides?
+	# shellcheck disable=SC1090
 	source shellswain.bash
 fi
 
 # local copy of this shellswain API function
-alias __hag_track=__shellswain_track
+function __hag_track(){
+	__shellswain_track "$@"
+}
 
 shopt -s histappend
 
 # TODO: this is so high up because I feel like it's a bit of a utility func that doesn't really belong in hag but is here because we need a simple expressive way to set it because it's not at all obvious on a naive read unless you've memorized the components...
+# TODO: this is one of those things that I'd like a sort of compile-in utility kit for. Maybe resholve, or a more granular tool like it, can do this.
+# TODO: but rename this version to make it clear it's the window title?
+# TODO: also note that this still has big problems with losing window/tab titles.
 function __hag_set_title()
 {
 	# echo -n -e "\033]0;" "$@" "\007"
 	printf '\e]1;%s\a' "$*"
 }
 
-# capture the starting shell, sans leading dash if present
-HAG_SHELL="${0/-/}"
+# when interactive, $0 should be the shell; if it contains a slash AFAIK it'll be a script
+if [[ $0 =~ / ]]; then
+	# do something different if this is a script
+	# (mainly a testing affordance)
+	HAG_SHELL="$(basename "$0")"
+else
+	# capture the starting shell, sans leading -|.|/ if present
+	HAG_SHELL="${0/-/}"
+fi
+# TODO: document why this is $1? Why isn't it considering a pre-set value and XDG? I guess it's just a more explicit API vision?
+# TODO: maybe rename all of HAG_DIR to HAG_DATA_DIR?
 HAG_DIR=${1:-~/.config/hag}
+export HAG_DB="$HAG_DIR/.db.sqlite3"
 __HAG_PREV_CMD_NUM=$HISTCMD
 export HAG_PIPE="$HAG_DIR/.pipe"
 export HAG_SESSION_DIR="$HAG_DIR/.sessions"
@@ -116,8 +132,9 @@ export hag # TODO: I'm not sure if this is necessary for subshells or if I was j
 
 function __hag_confirm_state_files() {
 	# dirs outputs tilde-relative path; +0 == current
+	# shellcheck disable=SC2155
 	local relpwd="$(dirs +0)"
-	mkdir -p "$HAG_PURPOSE_DIR"
+	mkdir -p "$HAG_SESSION_DIR" "$HAG_PURPOSE_DIR"
 	if [ ! -e "$HAG_PURPOSE_INIT_FILE" ]; then
 		echo "__hag_set_purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
 	fi
@@ -158,7 +175,7 @@ function __load_shell_history_from_db(){
 	local tmphist=$(mktemp)
 	# TODO: nail down path
 	# TODO: hardcoded limit; this should be based on HISTSIZE
-	sqlite3 "file:$HOME/.config/hag/.db.sqlite3?mode=ro" '.separator "\n"' ".once $tmphist" "select ran_at, entered_cmd from (select start_time, duration, '#'||substr(start_time,1,length(start_time)-6) as ran_at, entered_cmd from log where purpose='$HAG_PURPOSE' and start_time IS NOT NULL order by start_time DESC, duration DESC limit 500) as recent order by start_time ASC, duration ASC"
+	sqlite3 "file:${HAG_DB}?mode=ro" '.separator "\n"' ".once $tmphist" "select ran_at, entered_cmd from (select start_time, duration, '#'||substr(start_time,1,length(start_time)-6) as ran_at, entered_cmd from log where purpose='$HAG_PURPOSE' and start_time IS NOT NULL order by start_time DESC, duration DESC limit 500) as recent order by start_time ASC, duration ASC"
 	history -r "$tmphist"
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 }
@@ -181,6 +198,7 @@ function __load_shell_history() {
 	fi
 }
 
+# TODO: rm these; I was just testing AFAIR
 function trap_usr1(){
 	echo "trapped USR1" "$@"
 }
@@ -193,11 +211,12 @@ trap trap_usr2 USR2
 
 # TODO: document $2, and what we're doing with the md5sum?
 # TODO: actually, reading closer it looks like this is obsolete. I don't see it used. I think it's vestigial from when I was trying to make a file per command run, not a single stream/log
+# CAUTION: be careful, here. The function is obviously in use, so either the above comment is wrong, or it just means `read id __filename < <(md5sum "${2}")` is obsolete; tentatively commenting it out
 function __hag_make_history_file() {
 	local command=${1}
 
 	# shellcheck disable=SC2034,SC2162
-	read id __filename < <(md5sum "${2}")
+	# read id __filename < <(md5sum "${2}") # disabled per head comment oct 2022
 
 	local cmd_hist_file="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$command"
 
@@ -231,6 +250,12 @@ function __hag_pass_post_invocation(){
 }
 
 # PER COMMAND
+# TODO: I guess some alias or eval ~metaprogramming might be
+#       able to DRY some of the boilerplate around these (and
+#       the corresponding evals, like in: __hag_pre_cmd() {
+#         eval "$1"
+#         eval "$(event emit "__hag_pre_invocation_$2_vars")"
+#         ...
 function __pass_command_path(){
 	# shellcheck disable=SC2155
 	local command_path=$(type -P "$1");
@@ -254,7 +279,7 @@ function __pass_python_vars(){
 	# shellcheck disable=SC2155
 	local version=$(command "$1" --version 2>&1);
 
-	# TODO: I hate using grep for this; write the bash-only (expansion pattern matching maybe?) replacement at some poin--just not super urgent
+	# TODO: I hate using grep for this; write the bash-only (expansion pattern matching maybe?) replacement at some point--just not super urgent
 	if echo "$version" | grep -E "Python (2|3.[0-4])" > /dev/null; then
 		# python version <=3.4
 		local wrap_command=1;
@@ -450,9 +475,20 @@ function nix_shell_run(){
 	# * if I get all of the bash lines into the log, and the primary place they live is the log, I can probably reconstruct anything I care about wrt to individual sessions with heuristics or manual tagging later...
 }
 
+# curry args *by name* (indirection) instead of value
+__hag_curry_phase_args(){ # <phase> <command> [<argname>]
+	local -a to_curry
+	for i in "${@:3}"; do
+		to_curry+=("$i=${!i}")
+	done
+	__swain_curry_phase_args "$1" "$2" "${to_curry[@]}"
+}
+
+# TODO: document the variable preconditions for the next 3 functions
+# at least command_history_file and out_history_file here (though it also unsets command_path?)
 function __hag_pre_cmd() {
 	eval "$1"
-	eval "$(event emit __hag_pre_invocation_$2_vars)"
+	eval "$(event emit "__hag_pre_invocation_$2_vars")"
 
 	touch "$command_history_file"
 	local start_history_lines _hag_junkfile
@@ -462,7 +498,7 @@ function __hag_pre_cmd() {
 
 	# curry start_history_lines to the after_<command> hook
 	# Yes, start_history_line is not a variable here. Later, it'll be expanded with indirection.
-	__swain_curry "after" "$2" start_history_lines
+	__hag_curry_phase_args "after" "$2" start_history_lines
 
 	_tmp=$out_history_file
 	unset command_history_file command_path out_history_file _hag_junkfile start_history_lines
@@ -487,6 +523,7 @@ function __hag_run_cmd() {
 		# r(ead)l(ine)wrap lets us inject history where it wasn't. It may cause problems.
 		rlwrap --always-readline -H "$command_history_file" "$command_path" "${@:3}"
 	else
+		# TODO: figure out if command is essential here? It'll prevent hag from wrapping a function (but also, figure out if that's good/bad/neutral?)
 		command "$2" "${@:3}"
 	fi
 }
@@ -518,6 +555,7 @@ function __hag_record_history(){
 
 	# NOTES:
 	# - last field is echoed from a subshell (without quoting in the subshell!) to force shell expansion (so we record the command as-entered, *and* what it expanded to match @ runtime!)
+	# - above is a small lie when a globbed command created or removed files that match the glob, but I guess I feel like this is a small enough fraction of invocations to shrug off?
 	# - last 2 fields have space around quotes to keep python from breaking on commands that start/end with a single quote
 	# TODO: I guess the command expansion and tracking of the "expanded" command could be conditional, which would save performance and database size (especially if they frequently run commands with big globs...), but the database schemas would be incompatible, so I think at minimum it would be a *build* option, not a runtime one.
 	# shellcheck disable=SC2116,SC2086

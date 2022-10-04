@@ -1,13 +1,11 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -I nixpkgs=/Users/abathur/.nix-defexpr/channels/nixpkgs -i bash -p python3 -p sqlite
-# shellcheck shell=bash
+#!/usr/bin/env bash
 
 HAG_SRC="$1"
 HAG_DATA_DIR="$2"
 
-HAG_SCHEMA="$HAG_SRC/schema.sql"
+HAG_SCHEMA="$HAG_SRC/share/schema.sql"
 HAG_EXPORT_DIR="$HAG_DATA_DIR/.exported"
-HAG_NEXT_EXPORT_FILE="$HAG_EXPORT_DIR/$(uuidgen).sql"
+HAG_NEXT_EXPORT_FILE="$HAG_EXPORT_DIR/$(uuid).sql"
 
 export HAG_DB="$HAG_DATA_DIR/.db.sqlite3"
 export HAG_DB_IMPORTED="$HAG_DATA_DIR/.db.imported"
@@ -78,15 +76,15 @@ function _hag_start_daemon()
 {
 	_hag_set_up_data_dir
 
-	_hag_export_new_history
-
 	if [[ -e "$HAG_DB" && -e "$HAG_DB_IMPORTED" ]]; then
+		# Caution: this was above the if block; moved to fix a test but not 100% sure
+		_hag_export_new_history
 		_hag_import_unimported_export_files
 	else
 		_hag_rebuild_database
 	fi
 
-	exec "$HAG_SRC/daemon.py"
+	exec libexec/daemon.py &> whattheshit
 }
 
 # It's tempting to do some of the startup work on shutdown, but I tried using an exit trap here and it doesn't seem like we get control back between when the python daemon is forced to stop and when this file is forced to stop.

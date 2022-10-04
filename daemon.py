@@ -1,5 +1,4 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -I nixpkgs=/Users/abathur/.nix-defexpr/channels/nixpkgs -i python3 -p python3 -p sqlite
+#! /usr/bin/env python3
 from typing import Callable
 import os
 import platform
