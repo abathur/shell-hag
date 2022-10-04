@@ -1,13 +1,26 @@
 #with import <nixpkgs> {};
-{ stdenv, lib, resholvePackage, fetchFromGitHub, bashInteractive_5, coreutils, findutils, gnugrep, gnused, shellswain, smenu, sqlite, rlwrap
-, doCheck ? false, shellcheck }:
+{ lib
+, resholve
+, fetchFromGitHub
+, bashInteractive_5
+, coreutils
+, findutils
+, gnugrep
+, gnused
+, shellswain
+, smenu
+, sqlite
+, rlwrap
+, doCheck ? false
+, shellcheck
+}:
 let
 
 
   # service/daemon
 
 in
-resholvePackage rec {
+resholve.mkDerivation rec {
   pname = "hag";
   version = "unreleased";
 
@@ -15,8 +28,8 @@ resholvePackage rec {
     owner = "abathur";
     repo = "shell-hag";
     # rev = "v${version}";
-    rev = "130db6753f0a410ffa4111836de720bd295e0b9b";
-    hash = "sha256-w5dHJOOyCTor9xj77EsTzMZrU5QWTB8Iw4kUiKibn7w=";
+    rev = "acb6beff57438a84d0d63e7f8fddb3bed72834c6";
+    hash = "sha256-eynd6be/xzg2g5kSjSOvXmIj5Nbgv8eFzlOe7EI3GQc=";
   };
   # src = lib.cleanSource ../../../../work/hag;
 
