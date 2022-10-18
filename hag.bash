@@ -198,14 +198,8 @@ function __load_shell_history() {
 	fi
 }
 
-# TODO: document $2, and what we're doing with the md5sum?
-# TODO: actually, reading closer it looks like this is obsolete. I don't see it used. I think it's vestigial from when I was trying to make a file per command run, not a single stream/log
-# CAUTION: be careful, here. The function is obviously in use, so either the above comment is wrong, or it just means `read id __filename < <(md5sum "${2}")` is obsolete; tentatively commenting it out
 function __hag_make_history_file() {
 	local command=${1}
-
-	# shellcheck disable=SC2034,SC2162
-	# read id __filename < <(md5sum "${2}") # disabled per head comment oct 2022
 
 	local cmd_hist_file="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$command"
 
