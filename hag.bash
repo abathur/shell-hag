@@ -198,17 +198,6 @@ function __load_shell_history() {
 	fi
 }
 
-# TODO: rm these; I was just testing AFAIR
-function trap_usr1(){
-	echo "trapped USR1" "$@"
-}
-function trap_usr2(){
-	echo "trapped USR2" "$@"
-}
-
-trap trap_usr1 USR1
-trap trap_usr2 USR2
-
 # TODO: document $2, and what we're doing with the md5sum?
 # TODO: actually, reading closer it looks like this is obsolete. I don't see it used. I think it's vestigial from when I was trying to make a file per command run, not a single stream/log
 # CAUTION: be careful, here. The function is obviously in use, so either the above comment is wrong, or it just means `read id __filename < <(md5sum "${2}")` is obsolete; tentatively commenting it out
