@@ -63,7 +63,6 @@ function __hag_dehydrate() {
 	__hag_confirm_state_files
 }
 event on before_exit __hag_dehydrate
-# TODO move above alongside other global-scope source-time commands, or keep here for local clarity?
 
 __hag_load_purpose() {
 	# file readable by me
@@ -173,7 +172,6 @@ function __reload_shell_history_from_db(){
 function __load_shell_history_from_db(){
 	# shellcheck disable=SC2155
 	local tmphist=$(mktemp)
-	# TODO: nail down path
 	# TODO: hardcoded limit; this should be based on HISTSIZE
 	sqlite3 "file:${HAG_DB}?mode=ro" '.separator "\n"' ".once $tmphist" "select ran_at, entered_cmd from (select start_time, duration, '#'||substr(start_time,1,length(start_time)-6) as ran_at, entered_cmd from log where purpose='$HAG_PURPOSE' and start_time IS NOT NULL order by start_time DESC, duration DESC limit 500) as recent order by start_time ASC, duration ASC"
 	history -r "$tmphist"
@@ -215,7 +213,6 @@ function __hag_add_command_hooks(){
 
 # TODO: better document how all of this pass magick works
 # TODO: all basically the same function, maybe simplify the API and pass a specifier?
-# NOTE: if they turn up broken, I quoted ${@:2} in the next 3 functions at shellcheck's insistence
 function __hag_pass_per_command(){
 	for name in "${@:2}"; do
 		event on "__hag_command_$1_vars" "__pass_$name" "$1"
@@ -263,6 +260,8 @@ function __pass_python_vars(){
 	local version=$(command "$1" --version 2>&1)
 
 	# TODO: I hate using grep for this; write the bash-only (expansion pattern matching maybe?) replacement at some point--just not super urgent
+	# I think: [[ "Python 3.5.4" =~ Python.(2|3.[0-4]) ]]; echo $?
+	# but this isn't under test, so I'll resist the urge to fiddle atm.
 	if echo "$version" | grep -E "Python (2|3.[0-4])" > /dev/null; then
 		# python version <=3.4
 		local wrap_command=1
@@ -366,8 +365,7 @@ function nix_shell_run(){
 	# shellcheck disable=SC2086
 	eval "$1"
 
-	# for ref, old format: HISTFILE="$HAG_DIR/nix-shell/$(echo "$PWD" | tr / _)" command "$command_path" --keep HISTFILE "${@:3}";
-	# TODO: this histfile path uses the old format. If you actually write to it, hag will start interpreting nix-shell as a purpose. Which brings up a tricky point. The way I've broken everything down by .config/hag/<purpose>/<id>.<command> means that whether you call these <termid|command_hash>.<nix-shell|bash>, the *normal* structural expectation is for the history to get saved under its purpose (and, therefore, to have separate per-purpose history). I see 3 outs:
+	# The way I've broken everything down by .config/hag/<purpose>/<id>.<command> means that whether you call these <termid|command_hash>.<nix-shell|bash>, the *normal* structural expectation is for the history to get saved under its purpose (and, therefore, to have separate per-purpose history). I see 3 outs:
 	# 1 .config/hag/.nix-shell/<hash>
 	# 2 .config/hag/<purpose>/<termid|command_hash>.<nix-shell|bash>
 	# 3 prevent it from saving a file, and synthesize one from the db (but this is back around to needing to persist the nix-shell linkage/hash in the db somewhere)
@@ -385,7 +383,7 @@ function nix_shell_run(){
 	# TODO: this works, but in pure mode we lose:
 	# - history timestamps
 	# - the term/tab ID
-	# - the hag purpose (I'm not ceretain hag should re-run inside...)
+	# - the hag purpose (I'm not certain hag should re-run inside...)
 	# - probably some other related features we might actually want to drag in with us.
 	#
 	# One approach is explicitly passing it all in;
