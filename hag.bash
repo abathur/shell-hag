@@ -48,7 +48,7 @@ if [[ -n "$HAG_SESSION_ID" ]]; then
 	__load_shell_history
 else
 	# Just Apple Terminal for now. Add new terminals later? Could also make user manually add? Maybe an install step?
-	HAG_SESSION_ID=$TERM_SESSION_ID;
+	HAG_SESSION_ID=$TERM_SESSION_ID
 	# ex: Apple_Terminal_7751E932-9C21-41BC-BFF1-679774179E82.state
 	HAG_SESSION_FILE="$HAG_SESSION_DIR/${TERM_PROGRAM}_${HAG_SESSION_ID}.state"
 fi
@@ -95,7 +95,7 @@ function __hag_rehydrate() {
 
 	# If this didn't yield a purpose name, we want to force one.
 	if [ -z "$HAG_PURPOSE" ]; then
-		read -rp ":( hag doesn't have a purpose; please set one: " purpose;
+		read -rp ":( hag doesn't have a purpose; please set one: " purpose
 		__hag_reload_or_set_purpose "${purpose:-unset}"
 		__load_shell_history
 	fi
@@ -258,7 +258,7 @@ function __hag_pass_post_invocation(){
 #         ...
 function __pass_command_path(){
 	# shellcheck disable=SC2155
-	local command_path=$(type -P "$1");
+	local command_path=$(type -P "$1")
 	local -p # echo these vars for export
 }
 
@@ -277,12 +277,12 @@ function __pass_python_vars(){
 	# - python3 < 3.5 can use .python3_history
 	# - python3 > 3.5 is rudely forced to use .python_history
 	# shellcheck disable=SC2155
-	local version=$(command "$1" --version 2>&1);
+	local version=$(command "$1" --version 2>&1)
 
 	# TODO: I hate using grep for this; write the bash-only (expansion pattern matching maybe?) replacement at some point--just not super urgent
 	if echo "$version" | grep -E "Python (2|3.[0-4])" > /dev/null; then
 		# python version <=3.4
-		local wrap_command=1;
+		local wrap_command=1
 	fi
 
 	if [[ -n "$wrap_command" ]]; then
@@ -397,7 +397,7 @@ function nix_shell_run(){
 
 	# shellcheck disable=SC2034
 	read -r hash __filename < <(md5sum <<< "${to_hash}")
-	HISTFILE="$HAG_DIR/.nix-shell/$hash" command "$command_path" --keep HAG_SESSION_ID --keep HAG_SESSION_FILE --keep HAG_PURPOSE --keep HAG_PURPOSE_DIR --keep HISTFILE "${@:3}";
+	HISTFILE="$HAG_DIR/.nix-shell/$hash" command "$command_path" --keep HAG_SESSION_ID --keep HAG_SESSION_FILE --keep HAG_PURPOSE --keep HAG_PURPOSE_DIR --keep HISTFILE "${@:3}"
 	# append --keep HISTFILE to make sure it works for pure shells (though unless it can be double-invoked, it may be tricky to parse/massage)
 	# TODO: this works, but in pure mode we lose:
 	# - history timestamps
