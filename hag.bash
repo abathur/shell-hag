@@ -1,4 +1,10 @@
 # shellcheck shell=bash
+
+# Naming patterns:
+# - hag-specific functions and events start with "hag"
+# - namespace separators: '.' for functions and ':' for events
+# - use function _names for likely-internal behavior
+
 if [[ -z "$SHELLSWAIN_ABOARD" ]]; then
 	# TODO: doc what this provides?
 	# shellcheck disable=SC1090
@@ -6,17 +12,15 @@ if [[ -z "$SHELLSWAIN_ABOARD" ]]; then
 fi
 
 # local copy of this shellswain API function
-function __hag_track(){
+function hag.track(){
 	__shellswain_track "$@"
 }
 
 shopt -s histappend
 
-# TODO: this is so high up because I feel like it's a bit of a utility func that doesn't really belong in hag but is here because we need a simple expressive way to set it because it's not at all obvious on a naive read unless you've memorized the components...
 # TODO: this is one of those things that I'd like a sort of compile-in utility kit for. Maybe resholve, or a more granular tool like it, can do this.
-# TODO: but rename this version to make it clear it's the window title?
 # TODO: also note that this still has big problems with losing window/tab titles.
-function __hag_set_title()
+function _set_terminal_title()
 {
 	# echo -n -e "\033]0;" "$@" "\007"
 	printf '\e]1;%s\a' "$*"
@@ -45,7 +49,7 @@ export HAG_SESSION_DIR="$HAG_DIR/.sessions"
 # all need to be explicitly passed for this not to blow up in your face:
 # HAG_SESSION_ID, HAG_SESSION_FILE, HAG_PURPOSE, HISTFILE
 if [[ -n "$HAG_SESSION_ID" ]]; then
-	__load_shell_history
+	hag._load_shell_history
 else
 	# Just Apple Terminal for now. Add new terminals later? Could also make user manually add? Maybe an install step?
 	HAG_SESSION_ID=$TERM_SESSION_ID
@@ -53,18 +57,18 @@ else
 	HAG_SESSION_FILE="$HAG_SESSION_DIR/${TERM_PROGRAM}_${HAG_SESSION_ID}.state"
 fi
 
-function __hag_dehydrate() {
+function hag._dehydrate() {
 	if [[ -n "$HAG_PURPOSE" ]]; then
-		__haggregate_shell_history
+		hag.aggregate_shell_history
 	fi
 
 	# these should be in place already, but
 	# make sure the current state is restorable
-	__hag_confirm_state_files
+	hag._confirm_state_files
 }
-event on before_exit __hag_dehydrate
+event on before_exit hag._dehydrate
 
-__hag_load_purpose() {
+hag.load_purpose() {
 	# file readable by me
 	if [ -r "$1" ]; then
 		# shellcheck disable=SC1090
@@ -80,27 +84,27 @@ __hag_load_purpose() {
 	fi
 }
 
-function __hag_reload_or_set_purpose() {
+function hag._reload_or_set_purpose() {
 	if [ -n "$HAG_PURPOSE" ]; then
 		# purpose already set
-		__hag_set_purpose "$1"
+		hag.set_purpose "$1"
 	else
-		__hag_load_purpose "$HAG_DIR/$1/.init" || __hag_set_purpose "$1"
+		hag.load_purpose "$HAG_DIR/$1/.init" || hag.set_purpose "$1"
 	fi
 }
 
-function __hag_rehydrate() {
-	__hag_load_purpose "$HAG_SESSION_FILE"
+function hag._rehydrate() {
+	hag.load_purpose "$HAG_SESSION_FILE"
 
 	# If this didn't yield a purpose name, we want to force one.
 	if [ -z "$HAG_PURPOSE" ]; then
 		read -rp ":( hag doesn't have a purpose; please set one: " purpose
-		__hag_reload_or_set_purpose "${purpose:-unset}"
-		__load_shell_history
+		hag._reload_or_set_purpose "${purpose:-unset}"
+		hag._load_shell_history
 	fi
 }
 
-function __hag_tidy()
+function hag._tidy()
 {
 	find "$HAG_SESSION_DIR" -depth -type f -name "*.state" -mtime +14 -delete
 }
@@ -111,11 +115,11 @@ function hag(){
 			# TODO: there's probably a logic hole here wrt to purpose changes in a *running* shell.
 			# I think my intent is that it'd swap out your history for the one of the new purpose
 			# but this means it should probably save/aggregate the histfile for your previous purpose before it loads the new one
-			__hag_reload_or_set_purpose "$2"
-			__load_shell_history
+			hag._reload_or_set_purpose "$2"
+			hag._load_shell_history
 			;;
 		regenerate)
-			__reload_shell_history_from_db
+			hag._reload_shell_history_from_db
 			;;
 		*)
 			printf "\nThe hag profile plugin adds the following subcommands:\n"
@@ -127,22 +131,20 @@ function hag(){
 }
 export hag # TODO: I'm not sure if this is necessary for subshells or if I was just trying to publish it for the preflight script... need to test
 
-
-
-function __hag_confirm_state_files() {
+function hag._confirm_state_files() {
 	# dirs outputs tilde-relative path; +0 == current
 	# shellcheck disable=SC2155
 	local relpwd="$(dirs +0)"
 	mkdir -p "$HAG_SESSION_DIR" "$HAG_PURPOSE_DIR"
 	if [ ! -e "$HAG_PURPOSE_INIT_FILE" ]; then
-		echo "__hag_set_purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
+		echo "hag.set_purpose '$HAG_PURPOSE'" >> "$HAG_PURPOSE_INIT_FILE"
 	fi
 	# replace space with '\ '
 	echo "cd ${relpwd// /\\ }" > "$HAG_PURPOSE_PWD_FILE"
 	ln -fs "$HAG_PURPOSE_INIT_FILE" "$HAG_SESSION_FILE"
 }
 
-function __hag_set_purpose() {
+function hag.set_purpose() {
 	export HAG_PURPOSE="$1"
 	export HAG_PURPOSE_DIR="$HAG_DIR/$HAG_PURPOSE"
 	export HAG_PURPOSE_INIT_FILE="$HAG_PURPOSE_DIR/.init"
@@ -155,21 +157,21 @@ function __hag_set_purpose() {
 		source "$HAG_PURPOSE_PWD_FILE"
 	fi
 
-	__hag_confirm_state_files
-	__hag_set_title "$HAG_PURPOSE"
+	hag._confirm_state_files
+	_set_terminal_title "$HAG_PURPOSE"
 }
 
-function __haggregate_shell_history() {
+function hag.aggregate_shell_history() {
 	history -a
 }
 
-function __reload_shell_history_from_db(){
+function hag._reload_shell_history_from_db(){
 	history -c # empty current history
-	__load_shell_history_from_db
-	__overwrite_histfile_with_loaded_history
+	hag._load_shell_history_from_db
+	hag._overwrite_histfile_with_loaded_history
 }
 
-function __load_shell_history_from_db(){
+function hag._load_shell_history_from_db(){
 	# shellcheck disable=SC2155
 	local tmphist=$(mktemp)
 	# TODO: hardcoded limit; this should be based on HISTSIZE
@@ -178,11 +180,11 @@ function __load_shell_history_from_db(){
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 }
 
-function __overwrite_histfile_with_loaded_history(){
+function hag._overwrite_histfile_with_loaded_history(){
 	history -w
 }
 
-function __load_shell_history() {
+function hag._load_shell_history() {
 	history -r
 	((__HAG_PREV_CMD_NUM=HISTCMD-1))
 
@@ -191,12 +193,12 @@ function __load_shell_history() {
 	if [[ 0 == $__HAG_PREV_CMD_NUM ]]; then
 		# if there are shell history files, let's generate history
 		if compgen -G "$HAG_PURPOSE_DIR/*.$HAG_SHELL" > /dev/null; then
-			__load_shell_history_from_db
+			hag._load_shell_history_from_db
 		fi
 	fi
 }
 
-function __hag_make_history_file() {
+function hag._make_history_file() {
 	local command=${1}
 
 	local cmd_hist_file="$HAG_PURPOSE_DIR/$HAG_SESSION_ID.$command"
@@ -207,49 +209,49 @@ function __hag_make_history_file() {
 }
 
 # TODO: debugging "flow" in here is a bit painful. A map of how all this works will pay dividends... (a decent time to do this is during the public/private API rename/refactor)
-function __hag_add_command_hooks(){
-	__shellswain_command_init_hook "$1" __hag_init_command "${@:2}"
+function hag.add_command_hooks(){
+	__shellswain_command_init_hook "$1" hag._init_command "${@:2}"
 }
 
 # TODO: better document how all of this pass magick works
 # TODO: all basically the same function, maybe simplify the API and pass a specifier?
-function __hag_pass_per_command(){
+function hag.pass_per_command(){
 	for name in "${@:2}"; do
-		event on "__hag_command_$1_vars" "__pass_$name" "$1"
+		event on "hag:vars:command:$1" "hag.passable.$name" "$1"
 	done
 }
-function __hag_pass_pre_invocation(){
+function hag.pass_pre_invocation(){
 	for name in "${@:2}"; do
-		event on "__hag_pre_invocation_$1_vars" "__pass_$name" "$1"
+		event on "hag:vars:pre_invocation:$1" "hag.passable.$name" "$1"
 	done
 }
-function __hag_pass_post_invocation(){
+function hag.pass_post_invocation(){
 	for name in "${@:2}"; do
-		event on "__hag_post_invocation_$1_vars" "__pass_$name" "$1"
+		event on "hag:vars:post_invocation:$1" "hag.passable.$name" "$1"
 	done
 }
 
 # PER COMMAND
 # TODO: I guess some alias or eval ~metaprogramming might be
 #       able to DRY some of the boilerplate around these (and
-#       the corresponding evals, like in: __hag_pre_cmd() {
+#       the corresponding evals, like in: hag.hook.pre_cmd() {
 #         eval "$1"
-#         eval "$(event emit "__hag_pre_invocation_$2_vars")"
+#         eval "$(event emit "hag:vars:pre_invocation:$2")"
 #         ...
-function __pass_command_path(){
+function hag.passable.command_path(){
 	# shellcheck disable=SC2155
 	local command_path=$(type -P "$1")
 	local -p # echo these vars for export
 }
 
-function __pass_history_files(){
+function hag.passable.history_files(){
 	local command_history_file="$HOME/.$1_history"
 	# shellcheck disable=SC2155
-	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
+	local out_history_file=$(hag._make_history_file "$1" "$command_history_file")
 	local -p # echo these vars for export
 }
 
-function __pass_python_vars(){
+function hag.passable.python_vars(){
 	# history works a little weird for python
 	# python didn't have a history file until 3.5
 		# TODO: CONFIRM! ABOVE BASED ON CODE, BUT I DID HAVE A COMMENT STATING: .python_history file use starts in 3.4
@@ -276,24 +278,24 @@ function __pass_python_vars(){
 	fi
 
 	# shellcheck disable=SC2155
-	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
+	local out_history_file=$(hag._make_history_file "$1" "$command_history_file")
 	local -p # echo these vars for export
 }
-function __pass_sqlite3_vars(){
+function hag.passable.sqlite3_vars(){
 	local command_history_file="$HOME/.sqlite_history"
 	# shellcheck disable=SC2155
-	local out_history_file=$(__hag_make_history_file "$1" "$command_history_file")
+	local out_history_file=$(hag._make_history_file "$1" "$command_history_file")
 	local -p # echo these vars for export
 }
 
-function __pass_pre_command_timing(){
+function hag.passable.pre_command_timing(){
 	# shellcheck disable=SC2154
 	local start_time="${shellswain[start_time]}"
 	local start_timestamp="${shellswain[start_timestamp]}"
 	local -p # echo these vars for export
 }
 
-function __pass_post_command_timing(){
+function hag.passable.post_command_timing(){
 	# shellcheck disable=SC2154
 	local duration="${shellswain[duration]}"
 	local end_time="${shellswain[end_time]}"
@@ -308,9 +310,9 @@ function __pass_post_command_timing(){
 # $3  = function or "none"
 # $4  = function or "none"
 # $5+ = real cmd args
-function __hag_init_command(){
+function hag._init_command(){
 	# shellcheck disable=SC2155
-	local bundled=$(event emit "__hag_command_$1_vars")
+	local bundled=$(event emit "hag:vars:command:$1")
 	if [[ "$2" != "none" ]]; then
 		__swain_phase_listen "before" "$1" "$2" "$bundled" "$1"
 	fi
@@ -324,41 +326,41 @@ function __hag_init_command(){
 	fi
 }
 
-function __haggregate_nix-shell(){
+function hag.aggregator.nix-shell(){
 	# no pre/post to skip meta for now at least; I don't think bash will enjoy the meta cruft I'm adding
 	# TODO: test above assumption :]
-	__hag_add_command_hooks "nix-shell" none nix_shell_run none
-	__hag_pass_per_command "nix-shell" command_path
+	hag.add_command_hooks "nix-shell" none nix_shell_run none
+	hag.pass_per_command "nix-shell" command_path
 }
 
 # $1 will be python, python2, python3, python3.7, etc.
-function __haggregate_python(){
-	__hag_add_command_hooks "$1" __hag_pre_cmd __hag_run_cmd __hag_post_cmd
+function hag.aggregator.python(){
+	hag.add_command_hooks "$1" hag.hook.pre_cmd hag.hook.run_cmd hag.hook.post_cmd
 
-	__hag_pass_per_command "$1" command_path python_vars
-	__hag_pass_pre_invocation "$1" pre_command_timing
-	__hag_pass_post_invocation "$1" post_command_timing
+	hag.pass_per_command "$1" command_path python_vars
+	hag.pass_pre_invocation "$1" pre_command_timing
+	hag.pass_post_invocation "$1" post_command_timing
 }
 
-function __haggregate_sqlite3(){
-	__hag_add_command_hooks "$1" __hag_pre_cmd none __hag_post_cmd
+function hag.aggregator.sqlite3(){
+	hag.add_command_hooks "$1" hag.hook.pre_cmd none hag.hook.post_cmd
 
-	__hag_pass_per_command "$1" command_path sqlite3_vars
-	__hag_pass_pre_invocation "$1" pre_command_timing
-	__hag_pass_post_invocation "$1" post_command_timing
+	hag.pass_per_command "$1" command_path sqlite3_vars
+	hag.pass_pre_invocation "$1" pre_command_timing
+	hag.pass_post_invocation "$1" post_command_timing
 }
-function __haggregate_generic(){ # php, psql
-	__hag_add_command_hooks "$1" __hag_pre_cmd none __hag_post_cmd
+function hag.aggregator.generic(){ # php, psql
+	hag.add_command_hooks "$1" hag.hook.pre_cmd none hag.hook.post_cmd
 
-	__hag_pass_per_command "$1" command_path history_files
-	__hag_pass_pre_invocation "$1" pre_command_timing
-	__hag_pass_post_invocation "$1" post_command_timing
+	hag.pass_per_command "$1" command_path history_files
+	hag.pass_pre_invocation "$1" pre_command_timing
+	hag.pass_post_invocation "$1" post_command_timing
 }
-function __haggregate_fix_title(){ # ssh, weechat
-	__hag_add_command_hooks "$1" none none __hag_reset_title
+function hag.aggregator.fix_title(){ # ssh, weechat
+	hag.add_command_hooks "$1" none none hag.reset_title
 }
-function __hag_reset_title(){
-	__hag_set_title "$HAG_PURPOSE"
+function hag.reset_title(){
+	_set_terminal_title "$HAG_PURPOSE"
 }
 
 function nix_shell_run(){
@@ -457,7 +459,7 @@ function nix_shell_run(){
 }
 
 # curry args *by name* (indirection) instead of value
-__hag_curry_phase_args(){ # <phase> <command> [<argname>]
+hag._curry_phase_args(){ # <phase> <command> [<argname>]
 	local -a to_curry
 	for i in "${@:3}"; do
 		to_curry+=("$i=${!i}")
@@ -467,9 +469,9 @@ __hag_curry_phase_args(){ # <phase> <command> [<argname>]
 
 # TODO: document the variable preconditions for the next 3 functions
 # at least command_history_file and out_history_file here (though it also unsets command_path?)
-function __hag_pre_cmd() {
+function hag.hook.pre_cmd() {
 	eval "$1"
-	eval "$(event emit "__hag_pre_invocation_$2_vars")"
+	eval "$(event emit "hag:vars:pre_invocation:$2")"
 
 	touch "$command_history_file"
 	local start_history_lines _hag_junkfile
@@ -479,7 +481,7 @@ function __hag_pre_cmd() {
 
 	# curry start_history_lines to the after_<command> hook
 	# Yes, start_history_line is not a variable here. Later, it'll be expanded with indirection.
-	__hag_curry_phase_args "after" "$2" start_history_lines
+	hag._curry_phase_args "after" "$2" start_history_lines
 
 	_tmp=$out_history_file
 	unset command_history_file command_path out_history_file _hag_junkfile start_history_lines
@@ -497,7 +499,7 @@ function __hag_pre_cmd() {
 	unset _tmp
 }
 
-function __hag_run_cmd() {
+function hag.hook.run_cmd() {
 	eval "$1"
 
 	if [[ -n "$wrap_command" ]]; then
@@ -509,10 +511,10 @@ function __hag_run_cmd() {
 	fi
 }
 
-function __hag_post_cmd() {
+function hag.hook.post_cmd() {
 	eval "$1"
 	eval "$3"
-	eval "$(event emit "__hag_post_invocation_$2_vars")"
+	eval "$(event emit "hag:vars:post_invocation:$2")"
 
 	printf "%s\n" "end_time=${end_time@Q}" "end_timestamp=${end_timestamp}" "duration=${duration}" "===" >> "$out_history_file"
 
@@ -520,7 +522,7 @@ function __hag_post_cmd() {
 	return $?
 }
 
-function __hag_record_history(){
+function hag._record_history(){
 	# When the command number is the same (at least, during normal runs), it means we've entered an ignored command! So we'll ignore it. ignored commands may include:
 	# - duplicates ignored by HISTCONTROL=ignoredups
 	# - space-prefixed commands ignored by HISTCONTROL=ignorespace
@@ -543,19 +545,19 @@ function __hag_record_history(){
 	printf '["%s","%s",%d,%d,"%s",'"r''' %s ''',r''' %s ''']\n"  "${HAG_PURPOSE}" "${PWD}" "${shellswain[start_timestamp]}" "${shellswain[duration]}" "${shellswain[pipestatus]}" "${shellswain[command]}" "$(echo ${shellswain[command]})" >> "$HAG_PIPE"
 }
 
-function __hag_should_record_history()
+function hag._should_record_history()
 {
 	# TODO: bashup is leaking through, here; am I fine with that or should this be a swain API?
-	event on after_command __hag_record_history
+	event on after_command hag._record_history
 }
 
 # TODO: Not actually in use yet; this would be used
 # by a command that declares a purpose should no-longer
 # be recorded.
-function __hag_should_not_record_history()
+function hag._should_not_record_history()
 {
 	# TODO: bashup is leaking through, here; am I fine with that or should this be a swain API?
-	event off after_command __hag_record_history
+	event off after_command hag._record_history
 }
 
 # If there's no purpose, rehydrate
@@ -563,23 +565,23 @@ function __hag_should_not_record_history()
 # If the purpose IS set, we've been passed in vars
 # and need to back off to avoid overwriting.
 if [[ -z "$HAG_PURPOSE" ]]; then
-	__hag_rehydrate
+	hag._rehydrate
 fi
 
 # If this isn't set, record history like normal
 if [[ -z "$HAG_SHOULD_NOT_RECORD_HISTORY" ]]; then
-	__hag_should_record_history
+	hag._should_record_history
 fi
 
 # TODO: I probably need a scaffold for defining all interesting versions of python based on the ones that are on the path? Or I guess I can just make the user specify which ones to wrap. That might mean, in practice, that hag knows how to track everything below, but that my user profile has the actual list of commands that triggers it to add them?
 # I guess in python's case this could also be some slightly more efficient spec format that can do just python, python(2|3), and python(2|3).(\d+)?
 # TODO: at _some_ point, _some_ portion of the statements below and the callback methods should move out of this file (on the latter, I'm not sure how 'officially' hag should support specific commands?) This might be a plugin system?
-__hag_track "nix-shell" __haggregate_nix-shell
-__hag_track "python" __haggregate_python
-__hag_track "python2" __haggregate_python
-__hag_track "python3" __haggregate_python
-__hag_track "sqlite3" __haggregate_sqlite3
-__hag_track "psql" __haggregate_generic
-__hag_track "php" __haggregate_generic
-__hag_track "ssh" __haggregate_fix_title
-__hag_track "weechat" __haggregate_fix_title
+hag.track "nix-shell" hag.aggregator.nix-shell
+hag.track "python" hag.aggregator.python
+hag.track "python2" hag.aggregator.python
+hag.track "python3" hag.aggregator.python
+hag.track "sqlite3" hag.aggregator.sqlite3
+hag.track "psql" hag.aggregator.generic
+hag.track "php" hag.aggregator.generic
+hag.track "ssh" hag.aggregator.fix_title
+hag.track "weechat" hag.aggregator.fix_title

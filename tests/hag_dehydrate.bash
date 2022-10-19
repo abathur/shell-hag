@@ -26,14 +26,14 @@
 	}
 
 	function __haggregate(){
-		__hag_add_command_hooks "$1" __hag_pre_cmd none __hag_post_cmd
+		hag.add_command_hooks "$1" hag.hook.pre_cmd none hag.hook.post_cmd
 
-		__hag_pass_per_command "$1" command_path history_files wrap_command
-		__hag_pass_pre_invocation "$1" pre_command_timing
-		__hag_pass_post_invocation "$1" post_command_timing
+		hag.pass_per_command "$1" command_path history_files wrap_command
+		hag.pass_pre_invocation "$1" pre_command_timing
+		hag.pass_post_invocation "$1" post_command_timing
 	}
 
-	__hag_track "$1" __haggregate
+	hag.track "$1" __haggregate
 
 	# TODO: not a fan of how shellswain's testing woes also leak
 	# in here...; at least wrap this up in helpers?
