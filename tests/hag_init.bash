@@ -15,17 +15,13 @@ export TERM_PROGRAM=testterm TERM_SESSION_ID=testid
 			send -- "porpoise\r"
 			expect "porpoise\r\n" {
 				expect "\u001b]1;porpoise\u0007\u001b]2;\u0007" {
-					expect "Should hag track the history for purpose 'porpoise'" {
-						puts ""
-						puts "found purpose prompt"
+					expect "^Should hag track the history for purpose 'porpoise'? " {
 						send -- "y\r"
-						expect "y\r\n" {
-							puts ""
-							puts "found track prompt"
+						expect "y\r\n$" {
+							expect "hag is tracking history$" {
+								expect eof
+							}
 						}
-					}
-					expect "hag is tracking history" {
-						expect eof
 					}
 				}
 			}

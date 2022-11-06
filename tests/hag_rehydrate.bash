@@ -1,4 +1,4 @@
-#!/usr/bin/env bash --norc --noprofile -i +o history
+#!/usr/bin/env bash
 
 export HOME=home
 mkdir -p $HOME

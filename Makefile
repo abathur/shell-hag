@@ -19,4 +19,4 @@ uninstall:
 # excluding SC1091 (finding a sourced file) for now because it requires shellswain to be on the path
 check:
 	shellcheck -x -e SC1091 ./hag.bash ./hagd.bash ./hag_import_history.bash
-	bats tests
+	bats --timing tests

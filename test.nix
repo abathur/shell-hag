@@ -11,6 +11,9 @@
   upstream = hag.unresholved.overrideAttrs (old: {
     name = "${hag.name}-tests";
     dontInstall = true; # just need the build directory
+    prePatch = ''
+      patchShebangs .
+    '';
     installCheckInputs = [
       hag
       shellcheck

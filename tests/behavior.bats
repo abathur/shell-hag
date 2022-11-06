@@ -66,20 +66,18 @@ CASES
     line 5 contains "Should hag track the history for purpose"
     line 5 contains "porpoise"
     line 6 equals $'hag is tracking history\r'
-    # line 13 is uname output
-    line 10 begins "ingesting"
-    line 13 begins "ingesting"
-    # line 20 is uname -a output
-    line 18 equals $'before clear:\r'
-    line 19 equals $'history\r'
-    line 20 contains $'    1  export'
-    line 23 equals $'after clear:\r'
-    line 24 equals $'history\r'
+    # line 9 is uname output
+    # line 11 is uname -a output
+    line 16 equals $'before clear:\r'
+    line 17 equals $'history\r'
+    line 18 contains $'    1  export'
+    line 21 equals $'after clear:\r'
+    line 22 equals $'history\r'
     # nothing--we cleared it!
-    line 28 equals $'after regenerate:\r'
-    line 29 equals $'history\r'
-    line 30 ends $'    1  uname\r'
-    line 31 ends $'    2  uname -a\r'
+    line 25 equals $'after regenerate:\r'
+    line 26 equals $'history\r'
+    line 27 ends $'    1  uname\r'
+    line 28 ends $'    2  uname -a\r'
   })
 } <<CASES
 unbuffer ./hag_daemon.bash
@@ -92,8 +90,7 @@ CASES
     # expect script in this test asserts what hag prints;
     # so we assert what the test + expect print
     line 1 equals "no initial purpose"
-    line 4 equals "found purpose prompt"
-    line 7 equals "found track prompt"
+    line 4 equals $'hag is tracking history\r'
     line -3 equals ".init file created"
     line -2 equals $'\E]1;porpoise\a\E]2;\a'
     line -1 equals "purpose restored from .init"

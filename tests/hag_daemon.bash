@@ -10,7 +10,7 @@ if [[ -e .config/hag/.db.sqlite3 ]]; then
 	exit 1
 fi
 
-hagd.bash "" ".config/hag" &
+hagd.bash "" ".config/hag" &>/dev/null &
 
 # database should exist once the daemon's going
 until [[ -e .config/hag/.db.sqlite3 ]]; do
@@ -49,7 +49,7 @@ initial_commands(){
 }
 
 set -e
-initial_commands && [[ "$(sqlite3 .config/hag/.db.sqlite3 "select count(*) from log")" == "2" ]]
+initial_commands && [[ "$(sqlite3 -cmd ".timeout 5000" "file:$PWD/.config/hag/.db.sqlite3?mode=ro" "select count(*) from log")" == "2" ]]
 set +e
 
 expect <<-EOF
