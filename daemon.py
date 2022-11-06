@@ -16,7 +16,7 @@ insert_command = """
     VALUES (?,?,?,?,?,?,?,?,?)
 """
 
-# TODO: I think daemon.sh handle this from schema.sql
+# TODO: I think hagd.bash handles this from schema.sql
 create_tables = """
     CREATE TABLE IF NOT EXISTS log (
         -- low/no variety

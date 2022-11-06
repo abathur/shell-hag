@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: fold expand_aliases down into the API if it's essential?
-shopt -s expand_aliases
-
 export HOME=home
 mkdir -p $HOME
 
@@ -12,10 +9,29 @@ export TERM_PROGRAM=testterm TERM_SESSION_ID=testid
 (
 	[[ -z "$HAG_PURPOSE" ]] && echo "no initial purpose"
 
-	# "purpose" via stdin
-	source hag.bash "$PWD/.config/hag" <<< porpoise
+	expect <<-EOF
+		spawn -noecho bash --norc --noprofile -c "source hag.bash '$PWD/.config/hag'"
+		expect ":( hag doesn't have a purpose; please set one:" {
+			send -- "porpoise\r"
+			expect "porpoise\r\n" {
+				expect "\u001b]1;porpoise\u0007\u001b]2;\u0007" {
+					expect "Should hag track the history for purpose 'porpoise'" {
+						puts ""
+						puts "found purpose prompt"
+						send -- "y\r"
+						expect "y\r\n" {
+							puts ""
+							puts "found track prompt"
+						}
+					}
+					expect "hag is tracking history" {
+						expect eof
+					}
+				}
+			}
+		}
 
-	echo "" # newline
+	EOF
 
 	[[ -e .config/hag/porpoise/.init ]] && echo ".init file created"
 )

@@ -1,19 +1,27 @@
 { hag
 , shellcheck
 , bats
+, bats-require
 , bashInteractive
-, socat
+, expect
 , sqlite
 }:
 
-rec {
+{
   upstream = hag.unresholved.overrideAttrs (old: {
     name = "${hag.name}-tests";
     dontInstall = true; # just need the build directory
-    installCheckInputs = [ hag shellcheck bats bashInteractive socat sqlite ];
+    installCheckInputs = [
+      hag
+      shellcheck
+      (bats.withLibraries (p: [ bats-require ]))
+      bashInteractive
+      expect
+      sqlite
+    ];
     doInstallCheck = true;
     installCheckPhase = ''
-      ${bats}/bin/bats tests
+      make check
       touch $out
     '';
   });

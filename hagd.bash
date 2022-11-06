@@ -72,6 +72,12 @@ function _hag_rebuild_database()
 	sqlite3 "$HAG_DB" < <(_hag_load_schema_and_data)
 }
 
+# I want to come up with a good routine for cleaning up old state files, but this isn't it. Since I support merging state files from multiple systems and terminals. I think this can/should wait until I implement a good flow for do-not-track since those are the primary source of this pressure anyways
+# function _hag_tidy()
+# {
+# 	find "$HAG_SESSION_DIR" -depth -type l -name "*.state" -mtime +14 -delete
+# }
+
 function _hag_start_daemon()
 {
 	_hag_set_up_data_dir
@@ -84,8 +90,10 @@ function _hag_start_daemon()
 		_hag_rebuild_database
 	fi
 
-	exec libexec/daemon.py &> whattheshit
+	exec libexec/daemon.py
 }
+
+
 
 # It's tempting to do some of the startup work on shutdown, but I tried using an exit trap here and it doesn't seem like we get control back between when the python daemon is forced to stop and when this file is forced to stop.
 # It might be possible to do it in the python, but it's probably safest all around, in either case, to do it on startup if startup is at all acceptable.

@@ -12,11 +12,11 @@ install:
 	install hag.bash hagd.bash hag_import_history.bash ${DESTDIR}${bindir}
 
 uninstall:
-	rm -f ${DESTDIR}${libexec}/{daemon.sh,daemon.py}
+	rm -f ${DESTDIR}${libexec}/daemon.py
 	rm -f ${DESTDIR}${share}/schema.sql
-	rm -f ${DESTDIR}${bindir}/{hag.bash,hag_import_history.bash}
+	rm -f ${DESTDIR}${bindir}/{hag.bash,hagd.bash,hag_import_history.bash}
 
 # excluding SC1091 (finding a sourced file) for now because it requires shellswain to be on the path
 check:
-	shellcheck -x -e SC1091 ./hag.bash ./daemon.sh ./hag_import_history.bash
+	shellcheck -x -e SC1091 ./hag.bash ./hagd.bash ./hag_import_history.bash
 	bats tests

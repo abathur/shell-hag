@@ -13,12 +13,14 @@
       flake = false;
       follows = "shellswain/flake-compat";
     };
-
     shellswain.url = "github:abathur/shellswain/flaky-breaky-heart";
-    # comity.url = "github:abathur/comity/flaky-breaky-heart";
+    bats-require = {
+      url = "github:abathur/bats-require";
+      follows = "shellswain/bats-require";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, flake-compat, shellswain }:
+  outputs = { self, nixpkgs, flake-utils, flake-compat, shellswain, bats-require }:
     flake-utils.lib.eachDefaultSystem (system:
       with nixpkgs.lib;
       let
@@ -27,7 +29,7 @@
           overlays = [
             (final: prev: {
               shellswain = shellswain.packages."${system}".default;
-             # comity = comity.packages."${system}".default;
+              bats-require = bats-require.packages."${system}".default;
             })
           ];
         };

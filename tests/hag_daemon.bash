@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO: fold expand_aliases down into the API if it's essential?
-shopt -s expand_aliases
-
 export HOME=.
-# mkdir -p $HOME
 
 # fake session id
 export TERM_PROGRAM=testterm TERM_SESSION_ID=testid
@@ -21,51 +17,71 @@ until [[ -e .config/hag/.db.sqlite3 ]]; do
 	:
 done
 
-function load_in_subshell()(
-	# "purpose" via stdin
-	source hag.bash ".config/hag" <<< porpoise
-
-	echo "" # newline
-
-	history
-
-	# TODO: not a fan of how shellswain's testing woes also leak
-	# in here...; at least wrap this up in helpers?
-	eval "
-	_test(){
-		history -s $@
-		eval \"\${PS0@P}\"
-		$@
-		eval \"\$PROMPT_COMMAND\"
-		echo \"\${PS1@P}\"
-	}
-	"
-
-	# simulate first prompt
-	eval "${PS0@P}"
-	eval "$PROMPT_COMMAND"
-	echo "${PS1@P}"
-
-	_test
-)
+initial_commands(){
+	expect <<-EOF
+		spawn -noecho bash --norc --noprofile
+		stty -echo
+		send -- "export TERM_PROGRAM=testterm TERM_SESSION_ID=testid PS1='PROMPT>'\r"
+		expect "PROMPT>$" {
+			send -- "source hag.bash '$PWD/.config/hag'\r"
+			expect ":( hag doesn't have a purpose; please set one:" {
+				send -- "porpoise\r"
+				expect "porpoise\r\n" {
+					expect "\u001b]1;porpoise\u0007\u001b]2;\u0007" {
+						expect "Should hag track the history for purpose 'porpoise'" {
+							send -- "y\r"
+							expect "y\r\n"
+						}
+						expect "hag is tracking history" {
+							send -- "uname\r"
+							expect "PROMPT>$" {
+								send -- "uname -a\r"
+								expect "PROMPT>$" {
+									send -- "exit\r"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	EOF
+}
 
 set -e
-load_in_subshell "uname" && [[ "$(sqlite3 .config/hag/.db.sqlite3 "select count(*) from log")" == "1" ]]
-
-load_in_subshell "uname" && [[ "$(sqlite3 .config/hag/.db.sqlite3 "select count(*) from log")" == "2" ]]
+initial_commands && [[ "$(sqlite3 .config/hag/.db.sqlite3 "select count(*) from log")" == "2" ]]
 set +e
 
-(
-	source hag.bash ".config/hag" <<< porpoise
-	echo "" # newline
-	echo "before clear:"
-	history
-	history -c
-	echo "after clear:"
-	history
-
-	hag regenerate
-
-	echo "after regenerate:"
-	history
-)
+expect <<-EOF
+	spawn -noecho bash --norc --noprofile
+	stty -echo
+	# expect "bash-5.1"
+	send -- "export HISTIGNORE='history*:source*' TERM_PROGRAM=testterm TERM_SESSION_ID=testid PS1='PROMPT>'\r"
+	expect "PROMPT>$" {
+		send -- "source hag.bash '$PWD/.config/hag'\r"
+		expect "PROMPT>$" {
+			puts ""
+			puts "before clear:"
+			send -- "history\r"
+			expect "PROMPT>$" {
+				send -- "history -c\r"
+				expect "PROMPT>$" {
+					puts ""
+					puts "after clear:"
+					send -- "history\r"
+					expect "PROMPT>$" {
+						send -- "hag regenerate\r"
+						expect "PROMPT>$" {
+							puts ""
+							puts "after regenerate:"
+							send -- "history\r"
+							expect "PROMPT>$" {
+								send -- "exit\r"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+EOF

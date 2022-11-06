@@ -1,17 +1,19 @@
+bats_load_library bats-require
 load helpers
 
-# TODO: abstract out all of this socat cruft
+# TODO: clearly describe why some of these need unbuffer? or maybe just abstract it out and auto-apply it in all cases for consistency if it doesn't cause trouble?
 
 @test "self-creates appropriate directory structure" {
   require <({
     status 0
     # terminal title emitted by setting a purpose
-    line 1 equals $'\E]1;porpoise\a'
+    line 1 begins $'\E]1;porpoise\a\E]2;\a'
+    line 1 ends "hag is tracking history"
     # sanity check created dir
-    line 2 equals ".config/hag/.sessions"
+    line 2 ends ".config/hag/.sessions"
   })
 } <<CASES
-socat stdio exec:."/hag_directories.bash",pty,setsid,echo=0,crlf
+./hag_directories.bash
 CASES
 
 @test "records command invocations" {
@@ -21,7 +23,7 @@ CASES
     line -1 ends ",r''' ls ''',r''' ls ''']"
   })
 } <<CASES
-socat stdio exec:."/hag_track.bash ls",pty,setsid,echo=0,crlf
+./hag_track.bash ls
 CASES
 
 # this is just documenting reality, not utopia
@@ -31,7 +33,7 @@ CASES
     line 2 equals "shellswain doesn't currently track aliases (dern)"
   })
 } <<CASES
-socat stdio exec:."/hag_track.bash dern",pty,setsid,echo=0,crlf
+./hag_track.bash dern
 CASES
 
 @test "dehydrate saves histfile on exit" {
@@ -40,54 +42,62 @@ CASES
     line -1 equals "ls"
   })
 } <<CASES
-socat stdio exec:."/hag_dehydrate.bash ls",pty,setsid,echo=0,crlf
+./hag_dehydrate.bash ls
 CASES
 
 @test "rehydrate loads histfile on restart" {
   require <({
     status 0
-    # the output tester swallows empty lines, so if the below is line 2--it means there's no history
-    line 2 equals "ls: cannot access 'nothing': No such file or directory"
-    # but yes history on 2nd load
-    line 4 equals "    1  ls nothing"
+    line 1 begins $'\E]1;porpoise\a\E]2;\a'
+    line 1 ends "hag is tracking history"
+    # but history on 2nd load
+    line -1 equals "    1  ls nothing"
   })
 } <<CASES
-socat stdio exec:."/hag_rehydrate.bash ls nothing",pty,setsid,echo=0,crlf
+unbuffer ./hag_rehydrate.bash ls nothing
 CASES
 
+
+# TODO: this test is a bit slow; not sure if I'm using expect
+# optimally?
 @test "regenerates history from daemon" {
   require <({
     status 0
-    line 1 equals $'\E]1;porpoise\a'
-    # line 2 is uname output
-    line 3 equals $'\E]1;porpoise\a'
-    # but yes history on 2nd load
-    line 4 equals "    1  uname"
-    # line 5 is uname output
-    line 6 equals $'\E]1;porpoise\a'
-    line 7 equals "before clear:"
-    line 8 equals "    1  uname"
-    line 9 equals "    2  uname"
-    line 10 equals "after clear:"
+    line 5 contains "Should hag track the history for purpose"
+    line 5 contains "porpoise"
+    line 6 equals $'hag is tracking history\r'
+    # line 13 is uname output
+    line 10 begins "ingesting"
+    line 13 begins "ingesting"
+    # line 20 is uname -a output
+    line 18 equals $'before clear:\r'
+    line 19 equals $'history\r'
+    line 20 contains $'    1  export'
+    line 23 equals $'after clear:\r'
+    line 24 equals $'history\r'
     # nothing--we cleared it!
-    line 11 equals "after regenerate:"
-    line 12 equals "    1  uname"
-    line 13 equals "    2  uname"
+    line 28 equals $'after regenerate:\r'
+    line 29 equals $'history\r'
+    line 30 ends $'    1  uname\r'
+    line 31 ends $'    2  uname -a\r'
   })
 } <<CASES
-socat stdio exec:."/hag_daemon.bash",pty,setsid,echo=0,crlf
+unbuffer ./hag_daemon.bash
 CASES
 
 
 @test "reloads purpose from .init file" {
   require <({
     status 0
+    # expect script in this test asserts what hag prints;
+    # so we assert what the test + expect print
     line 1 equals "no initial purpose"
-    line 2 equals $'\E]1;porpoise\a'
-    line 3 equals ".init file created"
-    line 4 equals $'\E]1;porpoise\a'
-    line 5 equals "purpose restored from .init"
+    line 4 equals "found purpose prompt"
+    line 7 equals "found track prompt"
+    line -3 equals ".init file created"
+    line -2 equals $'\E]1;porpoise\a\E]2;\a'
+    line -1 equals "purpose restored from .init"
   })
 } <<CASES
-socat stdio exec:."/hag_init.bash ls nothing",pty,setsid,echo=0,crlf
+./hag_init.bash ls nothing
 CASES
