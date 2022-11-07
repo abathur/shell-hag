@@ -76,7 +76,7 @@
         # };
         # devShells.default = pkgs.callPackage ./shell.nix { };
 
-        darwinModules.default = { config, pkgs, ... }:
+        darwinModules.hag = { config, pkgs, ... }:
         let cfg = config.programs.hag;
         in {
           options.programs.hag = sharedOptions;
@@ -94,6 +94,7 @@
             # environment.systemPackages = [ cfg.package ];
           };
         };
+        darwinModules.default = self.darwinModules.${system}.hag;
       }
     );
 }
