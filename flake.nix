@@ -95,6 +95,37 @@
           };
         };
         darwinModules.default = self.darwinModules.${system}.hag;
+
+        nixosModules.hag = { config, pkgs, ... }:
+        let cfg = config.programs.hag;
+        in {
+          options.programs.hag = sharedOptions;
+          config = {
+            launchd.user.agents.hag = {
+              command = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
+              serviceConfig = {
+                StandardOutPath = builtins.toPath "${cfg.logFile}";
+                StandardErrorPath = builtins.toPath "${cfg.logFile}";
+                RunAtLoad = true;
+                KeepAlive = true;
+              };
+            };
+            systemd.services.hag = {
+              description = "Shell-hag";
+              # TODO: IDK about wantedBy and after
+              wantedBy = [ "multi-user.target" ];
+              after = [ "network.target" ];
+              serviceConfig = {
+                ExecStart = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
+                Restart = "on-failure";
+                # User = "lazyssh";
+              };
+            };
+            # TODO: probably don't need below now that this is resholved, but let's confirm before deleting it
+            # environment.systemPackages = [ cfg.package ];
+          };
+        };
+        nixosModules.default = self.darwinModules.${system}.hag;
       }
     );
 }
