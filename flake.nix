@@ -106,10 +106,10 @@
           inherit system;
           overlays = [
             bats-require.overlays.default
-            shellswain.overlays.default
-            shellswain.inputs.comity.overlays.default
+            # shellswain.overlays.default
+            # shellswain.inputs.comity.overlays.default
             self.overlays.default
-          ];
+          ] ++ builtins.attrValues shellswain.overlays;
         };
       in
         {
