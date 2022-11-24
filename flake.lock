@@ -147,11 +147,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1669265039,
-        "narHash": "sha256-93Qxnu4X8GEky9vEzmApFmd3PA/4DIFpr+h62kq9KMI=",
+        "lastModified": 1669272124,
+        "narHash": "sha256-OgXL3VCuVpAXetjiYJm3Usz6erLnfUYH1CRFFsQ+Seg=",
         "owner": "abathur",
         "repo": "shellswain",
-        "rev": "f78111cae9159cd83382949590faa2af6e5ad3c0",
+        "rev": "430891496ba9d2d2658dc1467d6574ee85316b80",
         "type": "github"
       },
       "original": {
