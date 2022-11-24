@@ -53,77 +53,73 @@
         '';
       };
     };
-  in flake-utils.lib.eachDefaultSystem (system:
+  in
+    {
+      overlays.default = final: prev: {
+        hag = prev.callPackage ./hag.nix { };
+      };
+      # darwinModules.hag = { config, pkgs, ... }:
+      # let cfg = config.programs.hag;
+      # in {
+      #   options.programs.hag = sharedOptions;
+      #   config = pkgs.lib.mkIf config.enabled {
+      #     launchd.user.agents.hag = {
+      #       command = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
+      #       serviceConfig = {
+      #         StandardOutPath = builtins.toPath "${cfg.logFile}";
+      #         StandardErrorPath = builtins.toPath "${cfg.logFile}";
+      #         RunAtLoad = true;
+      #         KeepAlive = true;
+      #       };
+      #     };
+      #     # TODO: probably don't need below now that this is resholved, but let's confirm before deleting it
+      #     # environment.systemPackages = [ cfg.package ];
+      #   };
+      # };
+      # # darwinModules.default = self.darwinModules.${system}.hag;
+
+      # nixosModules.hag = { config, pkgs, ... }:
+      # let cfg = config.programs.hag;
+      # in {
+      #   options.programs.hag = sharedOptions;
+      #   config = pkgs.lib.mkIf config.enabled {
+      #     systemd.services.hag = {
+      #       description = "Shell-hag";
+      #       # TODO: IDK about wantedBy and after
+      #       wantedBy = [ "multi-user.target" ];
+      #       after = [ "network.target" ];
+      #       serviceConfig = {
+      #         ExecStart = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
+      #         Restart = "on-failure";
+      #         # User = "lazyssh";
+      #       };
+      #     };
+      #     # TODO: probably don't need below now that this is resholved, but let's confirm before deleting it
+      #     # environment.systemPackages = [ cfg.package ];
+      #   };
+      # };
+      # nixosModules.default = self.darwinModules.${system}.hag;
+      # shell = ./shell.nix;
+    } // flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
-            (final: prev: {
-              shellswain = shellswain.packages."${system}".default;
-              bats-require = bats-require.packages."${system}".default;
-            })
-          ] ++ builtins.attrValues self.overlays;
+            bats-require.overlays.default
+            shellswain.overlays.default
+            shellswain.inputs.comity.overlays.default
+            self.overlays.default
+          ];
         };
-      in rec {
-        packages = flake-utils.lib.flattenTree {
-          hag = pkgs.hag;
-        };
-        # packages.hag = pkgs.callPackage ./hag.nix { };
-        # packages.default = self.packages.${system}.hag;
-        checks = pkgs.callPackages ./test.nix {
-          inherit (packages) hag;
-        };
-        # checks = {
-        #   hag = self.packages.${system}.hag;
-        #   # tests = self.packages.${system}.hag.tests;
-        # };
-        # devShells.default = pkgs.callPackage ./shell.nix { };
-      }
-    ) // {
-      overlays.hag = final: prev: {
-        hag = prev.pkgs.callPackage ./hag.nix { };
-      };
-
-      darwinModules.hag = { config, pkgs, ... }:
-      let cfg = config.programs.hag;
-      in {
-        options.programs.hag = sharedOptions;
-        config = pkgs.lib.mkIf config.enabled {
-          launchd.user.agents.hag = {
-            command = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
-            serviceConfig = {
-              StandardOutPath = builtins.toPath "${cfg.logFile}";
-              StandardErrorPath = builtins.toPath "${cfg.logFile}";
-              RunAtLoad = true;
-              KeepAlive = true;
-            };
+      in
+        {
+          packages = {
+            inherit (pkgs) hag;
+            default = pkgs.hag;
           };
-          # TODO: probably don't need below now that this is resholved, but let's confirm before deleting it
-          # environment.systemPackages = [ cfg.package ];
-        };
-      };
-      # darwinModules.default = self.darwinModules.${system}.hag;
-
-      nixosModules.hag = { config, pkgs, ... }:
-      let cfg = config.programs.hag;
-      in {
-        options.programs.hag = sharedOptions;
-        config = pkgs.lib.mkIf config.enabled {
-          systemd.services.hag = {
-            description = "Shell-hag";
-            # TODO: IDK about wantedBy and after
-            wantedBy = [ "multi-user.target" ];
-            after = [ "network.target" ];
-            serviceConfig = {
-              ExecStart = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
-              Restart = "on-failure";
-              # User = "lazyssh";
-            };
+          checks = pkgs.callPackages ./test.nix {
+            inherit (pkgs) hag;
           };
-          # TODO: probably don't need below now that this is resholved, but let's confirm before deleting it
-          # environment.systemPackages = [ cfg.package ];
-        };
-      };
-      # nixosModules.default = self.darwinModules.${system}.hag;
-    };
+        }
+    );
 }
