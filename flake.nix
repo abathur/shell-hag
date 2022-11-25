@@ -62,7 +62,7 @@
       let cfg = config.programs.hag;
       in {
         options.programs.hag = sharedOptions;
-        config = pkgs.lib.mkIf config.enabled {
+        config = {
           launchd.user.agents.hag = {
             command = "${cfg.package}/bin/hagd.bash '${cfg.package}' '${cfg.dataDir}'";
             serviceConfig = {
@@ -82,7 +82,7 @@
       let cfg = config.programs.hag;
       in {
         options.programs.hag = sharedOptions;
-        config = pkgs.lib.mkIf config.enabled {
+        config = {
           systemd.services.hag = {
             description = "Shell-hag";
             # TODO: IDK about wantedBy and after
