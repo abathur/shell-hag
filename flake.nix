@@ -55,9 +55,9 @@
     };
   in
     {
-      overlays.default = final: prev: {
-        hag = prev.callPackage ./hag.nix { };
-      };
+      overlays.default = nixpkgs.lib.composeExtensions shellswain.overlays.default (final: prev: {
+        hag = final.callPackage ./hag.nix { };
+      });
       darwinModules.default = { config, pkgs, ... }:
       let cfg = config.programs.hag;
       in {
