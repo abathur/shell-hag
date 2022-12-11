@@ -26,11 +26,12 @@
       source ${pkgs.hag}/bin/hag.bash
     '';
     sharedOptions = userHome: pkgs: with nixpkgs.lib; {
-      enable = mkOption {
-        description = "Whether to enable hag.";
-        default = false;
-        type = types.bool;
-      };
+      enable = mkEnableOption "hag";
+      # enable = mkOption {
+      #   description = "Whether to enable hag.";
+      #   default = false;
+      #   type = types.bool;
+      # };
 
       init = mkOption {
         default = true;
@@ -43,12 +44,14 @@
         '';
       };
 
-      package = mkOption {
-        description = "Hag package to use.";
-        default = pkgs.hag;
-        defaultText = "pkgs.hag";
-        type = types.package;
-      };
+      package = mkPackageOption pkgs "hag" { };
+
+      # package = mkOption {
+      #   description = "Hag package to use.";
+      #   default = pkgs.hag;
+      #   defaultText = "pkgs.hag";
+      #   type = types.package;
+      # };
 
       user = mkOption {
         type = types.str;

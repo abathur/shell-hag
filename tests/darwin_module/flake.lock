@@ -1,0 +1,231 @@
+{
+  "nodes": {
+    "bats-require": {
+      "inputs": {
+        "flake-compat": [
+          "hag",
+          "shellswain",
+          "comity",
+          "flake-compat"
+        ],
+        "flake-utils": [
+          "hag",
+          "shellswain",
+          "comity",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "hag",
+          "shellswain",
+          "comity",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1669257955,
+        "narHash": "sha256-ejqA6y4h9Tica1N60BYDlKRyULH/WhbLCgSmWIdUbAg=",
+        "owner": "abathur",
+        "repo": "bats-require",
+        "rev": "e77ab2e286581185f6da97b74cd5ea168e0de7b9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "abathur",
+        "repo": "bats-require",
+        "type": "github"
+      }
+    },
+    "comity": {
+      "inputs": {
+        "bats-require": "bats-require",
+        "flake-compat": "flake-compat",
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1669258744,
+        "narHash": "sha256-nBjidVcC8X8Ikrp1qisedav0xserBLL3qscLOFqcUXs=",
+        "owner": "abathur",
+        "repo": "comity",
+        "rev": "d37bebec336a78d391525bf318a52e5018440495",
+        "type": "github"
+      },
+      "original": {
+        "owner": "abathur",
+        "ref": "flaky-breaky-heart",
+        "repo": "comity",
+        "type": "github"
+      }
+    },
+    "darwin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1668784520,
+        "narHash": "sha256-gGgVAMwYPPmrfnvnoRi6OkEB5KRsNTb9uYzEceLdO/g=",
+        "owner": "lnl7",
+        "repo": "nix-darwin",
+        "rev": "6349b99bc2b96ded34d068a88c7c5ced406b7f7f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lnl7",
+        "ref": "master",
+        "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1650374568,
+        "narHash": "sha256-Z+s0J8/r907g149rllvwhb4pKi8Wam5ij0st8PwAh+E=",
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "b4a34015c698c7793d592d66adbab377907a2be8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "hag": {
+      "inputs": {
+        "bats-require": [
+          "hag",
+          "shellswain",
+          "bats-require"
+        ],
+        "flake-compat": [
+          "hag",
+          "shellswain",
+          "flake-compat"
+        ],
+        "flake-utils": [
+          "hag",
+          "shellswain",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "hag",
+          "shellswain",
+          "nixpkgs"
+        ],
+        "shellswain": "shellswain"
+      },
+      "locked": {
+        "lastModified": 0,
+        "narHash": "sha256-JwE8lh763V3YdIrce2T4Q/LD0PQXsmCoh/oE6KF6OFM=",
+        "path": "../../",
+        "type": "path"
+      },
+      "original": {
+        "path": "../../",
+        "type": "path"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1667639549,
+        "narHash": "sha256-frqZKSG/933Ctwl9voSZnXDwo8CqddXcjQhnCzwNqaM=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "cae3751e9f74eea29c573d6c2f14523f41c2821a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1670797596,
+        "narHash": "sha256-lc4b690J8iiYnNToc5j39N6gt3k9lQUDxe0D6Wzuj9k=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "fb83ee7d26bee200b2bd6b69df390c57dee4b6af",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "darwin": "darwin",
+        "hag": "hag",
+        "nixpkgs": "nixpkgs_2"
+      }
+    },
+    "shellswain": {
+      "inputs": {
+        "bats-require": [
+          "hag",
+          "shellswain",
+          "comity",
+          "bats-require"
+        ],
+        "comity": "comity",
+        "flake-compat": [
+          "hag",
+          "shellswain",
+          "comity",
+          "flake-compat"
+        ],
+        "flake-utils": [
+          "hag",
+          "shellswain",
+          "comity",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "hag",
+          "shellswain",
+          "comity",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1669272124,
+        "narHash": "sha256-OgXL3VCuVpAXetjiYJm3Usz6erLnfUYH1CRFFsQ+Seg=",
+        "owner": "abathur",
+        "repo": "shellswain",
+        "rev": "430891496ba9d2d2658dc1467d6574ee85316b80",
+        "type": "github"
+      },
+      "original": {
+        "owner": "abathur",
+        "ref": "flaky-breaky-heart",
+        "repo": "shellswain",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

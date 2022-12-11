@@ -23,3 +23,35 @@ jobs:
       run: nix-build
     - name: flake build + tests
       run: nix flake check --print-build-logs
+  test_darwin_module:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # no shallow
+    - uses: cachix/install-nix-action@v18
+      with:
+        nix_path: nixpkgs=channel:nixpkgs-unstable
+    # - name: install nix-darwin
+    #   run: |
+    #     set -x
+    #     nix-build -I nixpkgs=/nix/var/nix/profiles/per-user/$USER/channels/nixpkgs https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
+    #     ./result/bin/darwin-installer
+    - name: try to build a flake
+      run: |
+        set -x
+        cd tests/darwin_module
+        ./flakegen.sh > flake.nix
+        ls -la
+        cat flake.nix
+        git add flake.nix
+        printf 'run\tprivate/var/run\n' | sudo tee -a /etc/synthetic.conf
+        /System/Library/Filesystems/apfs.fs/Contents/Resources/apfs.util -t || true
+        nix build .#darwinConfigurations.ci.system --show-trace
+        ./result/sw/bin/darwin-rebuild switch --flake .#ci
+        source /etc/static/bashrc
+        type -pa bash vi
+        bash -x
+        launchctl list org.nixos.hag
+        echo TADA
+        cat ~/hag.log
