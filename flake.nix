@@ -106,7 +106,7 @@
             };
           };
           # TODO: unlike the nixos version, this is untested until you try it in nix darwin
-          programs.bash.interactiveShellInit = lib.mkIf cfg.init (sharedInit pkgs);
+          programs.bash.interactiveShellInit = lib.optionalString cfg.init (sharedInit pkgs);
         };
       };
       # darwinModules.default = self.darwinModules.${system}.hag;
@@ -129,7 +129,7 @@
               User = "${cfg.user}";
             };
           };
-          programs.bash.interactiveShellInit = lib.mkIf cfg.init (sharedInit pkgs);
+          programs.bash.interactiveShellInit = lib.optionalString cfg.init (sharedInit pkgs);
         };
       };
       # nixosModules.default = self.darwinModules.${system}.hag;
