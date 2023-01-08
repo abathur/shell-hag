@@ -34,7 +34,6 @@ resholve.mkDerivation rec {
   #   hash = "sha256-eynd6be/xzg2g5kSjSOvXmIj5Nbgv8eFzlOe7EI3GQc=";
   # };
   src = lib.cleanSource ./.;
-  # src = lib.cleanSource ../../../../work/hag;
   buildInputs = [ bashInteractive python3 ];
 
   solutions = {

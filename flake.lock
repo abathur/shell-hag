@@ -40,16 +40,15 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1669258744,
-        "narHash": "sha256-nBjidVcC8X8Ikrp1qisedav0xserBLL3qscLOFqcUXs=",
+        "lastModified": 1673141466,
+        "narHash": "sha256-MeUMYto8o6fCi3h4CYtO9axryNk+vgy7H1EppWq13KM=",
         "owner": "abathur",
         "repo": "comity",
-        "rev": "d37bebec336a78d391525bf318a52e5018440495",
+        "rev": "b3f7f9a529fb7fdc850f752ba2412f8ee429b946",
         "type": "github"
       },
       "original": {
         "owner": "abathur",
-        "ref": "flaky-breaky-heart",
         "repo": "comity",
         "type": "github"
       }
@@ -147,11 +146,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1669272124,
-        "narHash": "sha256-OgXL3VCuVpAXetjiYJm3Usz6erLnfUYH1CRFFsQ+Seg=",
+        "lastModified": 1673142358,
+        "narHash": "sha256-eMMGFAI4RpOcrGWw96uWtoN5Tb5/OfxA2AGhE878ZFk=",
         "owner": "abathur",
         "repo": "shellswain",
-        "rev": "430891496ba9d2d2658dc1467d6574ee85316b80",
+        "rev": "6927bdbf97faba3d503f441d58b6e589d290f62f",
         "type": "github"
       },
       "original": {
