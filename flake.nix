@@ -13,7 +13,7 @@
       flake = false;
       follows = "shellswain/flake-compat";
     };
-    shellswain.url = "github:abathur/shellswain/flaky-breaky-heart";
+    shellswain.url = "github:abathur/shellswain/v0.1.0";
     bats-require = {
       url = "github:abathur/bats-require";
       follows = "shellswain/bats-require";

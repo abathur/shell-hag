@@ -146,16 +146,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1673142358,
-        "narHash": "sha256-eMMGFAI4RpOcrGWw96uWtoN5Tb5/OfxA2AGhE878ZFk=",
+        "lastModified": 1673832881,
+        "narHash": "sha256-9miatthNMvaaIE5cKTAYojriRnHG3xUNcy7fKVKiAcw=",
         "owner": "abathur",
         "repo": "shellswain",
-        "rev": "6927bdbf97faba3d503f441d58b6e589d290f62f",
+        "rev": "294160c7cb4153f3f3d5a1fa1f517c935edbad3e",
         "type": "github"
       },
       "original": {
         "owner": "abathur",
-        "ref": "flaky-breaky-heart",
+        "ref": "v0.1.0",
         "repo": "shellswain",
         "type": "github"
       }
