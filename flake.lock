@@ -40,11 +40,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1673141466,
-        "narHash": "sha256-MeUMYto8o6fCi3h4CYtO9axryNk+vgy7H1EppWq13KM=",
+        "lastModified": 1674348911,
+        "narHash": "sha256-iY7GviaGhEdlM5EJZUMWdXfyG6pGixhul8+H3s3jYrE=",
         "owner": "abathur",
         "repo": "comity",
-        "rev": "b3f7f9a529fb7fdc850f752ba2412f8ee429b946",
+        "rev": "1a73e4163fdc7b440980c8882bfe114d544d5174",
         "type": "github"
       },
       "original": {
@@ -146,16 +146,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1674009726,
-        "narHash": "sha256-sW3GLabJK00nu6mQEbKJT4YYKkZRcI6xOvhlyZxejsM=",
+        "lastModified": 1674349631,
+        "narHash": "sha256-/Z+5GpftfD1V7/33y1e2F2xCqeHQzIA/a22iBcuwaXA=",
         "owner": "abathur",
         "repo": "shellswain",
-        "rev": "7f16d4ae3115bddb206b4406e9fea98678c92436",
+        "rev": "19ef1b79ef5f1adfe1caf0dbe5000aa9ec5b5bc4",
         "type": "github"
       },
       "original": {
         "owner": "abathur",
-        "ref": "stop_exporting_promptcommand",
+        "ref": "v0.3.0",
         "repo": "shellswain",
         "type": "github"
       }
